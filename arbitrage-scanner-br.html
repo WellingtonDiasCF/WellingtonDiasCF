@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArbitrageScanner BR 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green:   #00e676;
+    --green-d: #00b358;
+    --gold:    #ffd740;
+    --red:     #ff5252;
+    --bg:      #080c0a;
+    --bg1:     #0d1410;
+    --bg2:     #111a14;
+    --bg3:     #172011;
+    --border:  #1e3025;
+    --text:    #c8d8c8;
+    --muted:   #4d6657;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon {
+    width: 46px; height: 46px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .logo h1 {
+    font-family: var(--mono);
+    font-size: 1.2em;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .logo p { font-size: 0.75em; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 0.7em;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-align: right;
+    line-height: 1.7;
+  }
+  .header-badge span { color: var(--green); }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+  .field label {
+    font-family: var(--mono);
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 0.9em;
+    transition: border-color .2s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--green);
+    outline: none;
+    background: var(--bg2);
+  }
+  .field select option { background: #111; }
+
+  .api-key-wrap { flex: 2; min-width: 240px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 11px 24px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: .2s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: #000;
+  }
+  .btn-primary:hover { background: var(--green-d); transform: translateY(-1px); }
+  .btn-primary:active { transform: none; }
+  .btn-primary:disabled { background: var(--muted); color: #222; cursor: default; transform: none; }
+
+  .api-links {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .api-link {
+    font-family: var(--mono);
+    font-size: 0.7em;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: .2s;
+  }
+  .api-link:hover { color: var(--green); border-color: var(--green); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    font-family: var(--mono);
+    font-size: 0.75em;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-top: 12px;
+    display: none;
+  }
+  .status-bar.info  { background: #0a1e14; color: var(--muted); border: 1px solid var(--border); display: block; }
+  .status-bar.error { background: #1e0a0a; color: var(--red);   border: 1px solid #3e1515;       display: block; }
+  .status-bar.ok    { background: #0a1e14; color: var(--green); border: 1px solid #1a4025;       display: block; }
+
+  /* ── CALCULADORA MANUAL ── */
+  .calc-result { display: none; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .calc-summary {
+    font-family: var(--mono);
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  /* ── RESULTADO GRID ── */
+  .bet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .bet-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 12px;
+    text-align: center;
+    transition: border-color .2s;
+  }
+  .bet-box.hi { border-color: var(--gold); background: #1a1700; }
+  .bet-box-label {
+    font-family: var(--mono);
+    font-size: 0.65em;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .bet-box-bookie {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.75em;
+    font-weight: 700;
+    color: var(--green);
+    text-decoration: none;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bet-box-bookie:hover { color: #fff; text-decoration: underline; }
+  .odd-val {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.6em;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .stake-val {
+    display: block;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1em;
+    color: var(--gold);
+  }
+  .ret-val {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.7em;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* ── CARDS ── */
+  .results-header {
+    font-family: var(--mono);
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #opp-count {
+    color: var(--green);
+    font-size: 1.1em;
+  }
+
+  .card {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--green);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    position: relative;
+    animation: fadeIn .35s ease both;
+  }
+  .card.priority {
+    border-left-color: var(--gold);
+    background: #0f1100;
+    border-color: #2a2600;
+    border-left-width: 5px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+  .card-meta { flex: 1; }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.62em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .tag-sport  { background: var(--bg3); color: var(--green); border: 1px solid #234; }
+  .tag-league { background: var(--green); color: #000; }
+  .tag-prio   { background: var(--gold); color: #000; animation: blink 2.5s ease-in-out infinite; }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .65; }
+  }
+
+  .card-teams {
+    font-size: 1em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+  .card-info {
+    display: flex;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 0.72em;
+    color: var(--muted);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .card-info .fresh { color: var(--green); }
+  .card-info .warn  { color: var(--gold); }
+  .card-info .stale { color: var(--red); font-weight: 700; }
+
+  .profit-badge {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.6em;
+    color: var(--green);
+    text-align: right;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .profit-badge.priority { color: var(--gold); }
+  .profit-sub {
+    font-family: var(--mono);
+    font-size: 0.65em;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 3px;
+  }
+
+  .card-grid { margin-top: 14px; }
+
+  /* ── EMPTY / LOADING ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85em;
+    display: none;
+  }
+  .empty-state .icon { font-size: 2.5em; margin-bottom: 12px; display: block; }
+
+  /* ── SPINNER ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  /* ── SEPARATOR ── */
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  /* ── SCROLL BAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <h1>ArbitrageScanner BR</h1>
+        <p>// ODDS ENGINE v2.6 · MERCADO BRASILEIRO</p>
+      </div>
+    </div>
+    <div class="header-badge">
+      Casas ativas: <span id="bookie-count">—</span><br>
+      Requisições restantes: <span id="req-remain">—</span><br>
+      Última varredura: <span id="last-scan">nunca</span>
+    </div>
+  </div>
+
+  <!-- CONFIG PANEL -->
+  <div class="panel">
+    <div class="panel-title">⚙ Configuração do Scanner</div>
+    <div class="fields">
+      <div class="field api-key-wrap">
+        <label>API Key · The Odds API</label>
+        <input type="password" id="api-key" placeholder="Cole sua chave aqui...">
+      </div>
+      <div class="field" style="max-width:140px;">
+        <label>Banca Total (R$)</label>
+        <input type="number" id="banca" value="1000" min="10" step="10" oninput="calcManual()">
+      </div>
+      <div class="field" style="max-width:200px;">
+        <label>Alcance da varredura</label>
+        <select id="esporte">
+          <option value="upcoming">Próximos 7 dias (Geral)</option>
+          <option value="soccer">Futebol — Todas as ligas</option>
+          <option value="basketball_nba">NBA</option>
+        </select>
+      </div>
+      <div class="field" style="flex:0;">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" id="scan-btn" onclick="scan()">▶ ESCANEAR</button>
+      </div>
+    </div>
+    <div class="api-links">
+      <a href="https://temp-mail.org/pt/" target="_blank" class="api-link">📧 Gerar e-mail temporário</a>
+      <a href="https://the-odds-api.com/#get-api-key" target="_blank" class="api-link">🔑 Obter API Key gratuita</a>
+      <a href="https://the-odds-api.com/liveapi/guides/v4/#get-sports" target="_blank" class="api-link">📖 Documentação da API</a>
+    </div>
+    <div id="scan-status" class="status-bar info">
+      🟢 Scanner pronto. Insira sua API Key gratuita (500 req/mês) e clique em Escanear.
+    </div>
+  </div>
+
+  <!-- CALCULADORA MANUAL -->
+  <div class="panel">
+    <div class="panel-title">🧮 Calculadora de Arbitragem Manual (offline)</div>
+    <div class="fields">
+      <div class="field" style="max-width:160px;">
+        <label>Tipo de mercado</label>
+        <select id="m-tipo" onchange="toggleX(); calcManual()">
+          <option value="2">2 resultados (NBA, Tênis)</option>
+          <option value="3">3 resultados (Futebol)</option>
+        </select>
+      </div>
+      <div class="field" style="max-width:140px;">
+        <label>Odd 1 · Casa</label>
+        <input type="number" id="m-o1" step="0.01" min="1.01" placeholder="ex: 2.10" oninput="calcManual()">
+      </div>
+      <div class="field" id="wrap-ox" style="max-width:140px; display:none;">
+        <label>Odd X · Empate</label>
+        <input type="number" id="m-ox" step="0.01" min="1.01" placeholder="ex: 3.50" oninput="calcManual()">
+      </div>
+      <div class="field" style="max-width:140px;">
+        <label>Odd 2 · Visitante</label>
+        <input type="number" id="m-o2" step="0.01" min="1.01" placeholder="ex: 3.80" oninput="calcManual()">
+      </div>
+    </div>
+    <div id="m-res" class="calc-result">
+      <div id="m-summary" class="calc-summary"></div>
+      <div class="bet-grid" id="m-grid"></div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="results-area" style="display:none;">
+    <div class="results-header">
+      <span>Oportunidades mapeadas — <span id="opp-count">0</span></span>
+      <span>Ordenado por: Prioridade · Lucro</span>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <span class="icon">📡</span>
+    Nenhuma oportunidade encontrada neste momento.<br>
+    O mercado pode estar equilibrado. Tente novamente em alguns minutos.
+  </div>
+
+</div>
+<script>
+// ============================================================
+// CASAS QUE OPERAM LEGALMENTE NO BRASIL (chaves The Odds API)
+// ============================================================
+const BOOKMAKERS = [
+  { key: 'bet365',        name: 'Bet365',       url: 'https://www.bet365.com/' },
+  { key: 'betano',        name: 'Betano',        url: 'https://www.betano.com.br/' },
+  { key: 'betfair_ex_uk', name: 'Betfair Exch.', url: 'https://www.betfair.com/exchange/plus/' },
+  { key: 'betfair_sb_uk', name: 'Betfair SB',    url: 'https://www.betfair.com/br' },
+  { key: 'betsson',       name: 'Betsson',        url: 'https://www.betsson.com/pt-br' },
+  { key: 'bodog',         name: 'Bodog',          url: 'https://www.bodog.com/br' },
+  { key: 'coolbet',       name: 'Coolbet',        url: 'https://www.coolbet.com/pt' },
+  { key: 'kto',           name: 'KTO',            url: 'https://www.kto.com/pt/' },
+  { key: 'marathonbet',   name: 'MarathonBet',    url: 'https://www.marathonbet.com/br/' },
+  { key: 'novibet',       name: 'Novibet',        url: 'https://www.novibet.com.br/' },
+  { key: 'onexbet',       name: '1xBet',          url: 'https://1xbet.br.com/' },
+  { key: 'parimatch',     name: 'Parimatch',      url: 'https://parimatch.com.br/' },
+  { key: 'pinnacle',      name: 'Pinnacle',       url: 'https://www.pinnacle.com/' },
+  { key: 'sportingbet',   name: 'Sportingbet',    url: 'https://www.sportingbet.com/br' },
+  { key: 'stake',         name: 'Stake',          url: 'https://stake.com/' },
+  { key: 'rivalo',        name: 'Rivalo',         url: 'https://www.rivalo.com/pt' },
+];
+
+const BK_MAP   = Object.fromEntries(BOOKMAKERS.map(b => [b.key, b]));
+const BK_KEYS  = BOOKMAKERS.map(b => b.key).join(',');
+const PRIORITY = new Set(['bet365', 'betano', 'pinnacle', 'betfair_ex_uk']);
+
+// ============================================================
+// TRADUÇÕES
+// ============================================================
+const SPORT_NAMES = {
+  soccer_brazil_campeonato:         'Futebol · Brasileirão Série A',
+  soccer_brazil_campeonato_b:       'Futebol · Brasileirão Série B',
+  soccer_epl:                       'Futebol · Premier League',
+  soccer_spain_la_liga:             'Futebol · La Liga',
+  soccer_germany_bundesliga:        'Futebol · Bundesliga',
+  soccer_italy_serie_a:             'Futebol · Serie A',
+  soccer_france_ligue_one:          'Futebol · Ligue 1',
+  soccer_portugal_primeira_liga:    'Futebol · Primeira Liga',
+  soccer_uefa_champs_league:        'Futebol · Champions League',
+  soccer_conmebol_copa_libertadores:'Futebol · Libertadores',
+  soccer_usa_mls:                   'Futebol · MLS',
+  basketball_nba:                   'Basquete · NBA',
+  tennis_atp:                       'Tênis · ATP',
+  tennis_wta:                       'Tênis · WTA',
+};
+
+function sportLabel(sportKey, sportTitle) {
+  if (SPORT_NAMES[sportKey]) return SPORT_NAMES[sportKey];
+  // fallback: limpa o título da API
+  return sportTitle
+    .replace('Soccer - ', 'Futebol · ')
+    .replace('Basketball - ', 'Basquete · ')
+    .replace('Tennis - ', 'Tênis · ');
+}
+
+// ============================================================
+// UTILITÁRIOS
+// ============================================================
+function bookieUrl(key)  { return BK_MAP[key]?.url  || `https://www.google.com/search?q=${encodeURIComponent(key)}+apostas`; }
+function bookieName(key) { return BK_MAP[key]?.name || key; }
+
+function timeAgo(iso) {
+  if (!iso) return { text: 'Desconhecida', cls: 'stale' };
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 90)   return { text: `${diff}s atrás`,                                     cls: 'fresh' };
+  if (diff < 3600) return { text: `${Math.floor(diff/60)}m ${diff%60}s atrás`,           cls: diff < 300 ? 'warn' : 'stale' };
+  return { text: `${Math.floor(diff/3600)}h ${Math.floor((diff%3600)/60)}m atrás`,        cls: 'stale' };
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit', month: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+// ============================================================
+// CALCULADORA MANUAL
+// ============================================================
+function toggleX() {
+  const show = document.getElementById('m-tipo').value === '3';
+  document.getElementById('wrap-ox').style.display = show ? 'flex' : 'none';
+}
+
+function calcManual() {
+  const banca = parseFloat(document.getElementById('banca').value) || 1000;
+  const o1    = parseFloat(document.getElementById('m-o1').value) || 0;
+  const o2    = parseFloat(document.getElementById('m-o2').value) || 0;
+  const ox    = parseFloat(document.getElementById('m-ox').value) || 0;
+  const tipo  = document.getElementById('m-tipo').value;
+  const resDiv= document.getElementById('m-res');
+
+  if (o1 <= 1 || o2 <= 1) { resDiv.style.display = 'none'; return; }
+
+  let soma = 1/o1 + 1/o2;
+  if (tipo === '3' && ox > 1) soma += 1/ox;
+
+  resDiv.style.display = 'block';
+  const pct   = ((1 - soma) * 100).toFixed(2);
+  const lucro = ((banca / soma) - banca).toFixed(2);
+  const isArb = soma < 1;
+
+  document.getElementById('m-summary').innerHTML =
+    `Margem implícita: <strong style="color:${isArb ? 'var(--green)' : 'var(--red)'}">${pct}%</strong>` +
+    (isArb ? ` · Lucro estimado: <strong style="color:var(--gold)">R$ ${lucro}</strong>` :
+              ` · <span style="color:var(--muted)">Sem oportunidade de arbitragem</span>`);
+
+  const stake1 = Math.round(banca / (o1 * soma));
+  const stakeX = (tipo === '3' && ox > 1) ? Math.round(banca / (ox * soma)) : 0;
+  const stake2 = Math.round(banca / (o2 * soma));
+
+  const box = (label, odd, stake) => `
+    <div class="bet-box">
+      <div class="bet-box-label">${label}</div>
+      <span class="odd-val">${odd}</span>
+      <span class="stake-val">R$ ${stake}</span>
+      <span class="ret-val">Retorno: R$ ${Math.round(stake * odd)}</span>
+    </div>`;
+
+  let html = box('Casa', o1, stake1);
+  if (tipo === '3' && ox > 1) html += box('Empate', ox, stakeX);
+  html += box('Visitante', o2, stake2);
+  document.getElementById('m-grid').innerHTML = html;
+}
+
+// ============================================================
+// CÁLCULO DE ARBITRAGEM (robusto para 2-way e 3-way)
+// ============================================================
+function findArb(game) {
+  const isSoccer = game.sport_key.startsWith('soccer');
+
+  // Percorre todas as casas e guarda a melhor odd para cada desfecho
+  let best = {}; // { outcomeName: { odd, bkKey, bkTitle, lastUpdate, isPriority } }
+
+  for (const bk of game.bookmakers) {
+    const h2h = bk.markets.find(m => m.key === 'h2h');
+    if (!h2h) continue;
+    const isPrio = PRIORITY.has(bk.key);
+
+    for (const out of h2h.outcomes) {
+      const n = out.name;
+      if (!best[n] || out.price > best[n].odd) {
+        best[n] = { odd: out.price, bkKey: bk.key, bkTitle: bk.title, lastUpdate: bk.last_update, isPriority: isPrio };
+      }
+    }
+  }
+
+  const homeKey  = game.home_team;
+  const awayKey  = game.away_team;
+  const drawKey  = Object.keys(best).find(k => k === 'Draw' || k === 'Empate');
+
+  const m1 = best[homeKey];
+  const m2 = best[awayKey];
+  const mX = drawKey ? best[drawKey] : null;
+
+  if (!m1 || !m2 || m1.odd <= 1 || m2.odd <= 1) return null;
+
+  let soma = 1/m1.odd + 1/m2.odd;
+  if (isSoccer && mX && mX.odd > 1) soma += 1/mX.odd;
+
+  if (soma >= 1) return null; // sem arbitragem
+
+  const isPriority = [m1, mX, m2].some(x => x?.isPriority);
+  const latestUpdate = [m1, mX, m2]
+    .filter(Boolean)
+    .map(x => new Date(x.lastUpdate || 0))
+    .sort((a,b) => b - a)[0]?.toISOString();
+
+  return { soma, m1, mX: isSoccer ? mX : null, m2, isPriority, lucro: 1 - soma, lastUpdate: latestUpdate };
+}
+
+// ============================================================
+// RENDER CARD
+// ============================================================
+function renderCard(game, arb, banca) {
+  const card = document.createElement('div');
+  card.className = `card${arb.isPriority ? ' priority' : ''}`;
+
+  const pct    = (arb.lucro * 100).toFixed(2);
+  const lucroR = ((banca / arb.soma) - banca).toFixed(2);
+  const label  = sportLabel(game.sport_key, game.sport_title);
+  const upd    = timeAgo(arb.lastUpdate);
+
+  const stake1 = Math.round(banca / (arb.m1.odd * arb.soma));
+  const stakeX = arb.mX ? Math.round(banca / (arb.mX.odd * arb.soma)) : 0;
+  const stake2 = Math.round(banca / (arb.m2.odd * arb.soma));
+
+  const betBox = (desc, data, stake) => {
+    if (!data) return '';
+    const url  = bookieUrl(data.bkKey);
+    const name = bookieName(data.bkKey);
+    const ret  = Math.round(stake * data.odd);
+    return `
+      <div class="bet-box${data.isPriority ? ' hi' : ''}">
+        <div class="bet-box-label">${desc}</div>
+        <a href="${url}" target="_blank" rel="noopener" class="bet-box-bookie">${name}</a>
+        <span class="odd-val">${data.odd.toFixed(2)}</span>
+        <span class="stake-val">R$ ${stake}</span>
+        <span class="ret-val">Retorno: R$ ${ret}</span>
+      </div>`;
+  };
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-meta">
+        <div class="tags">
+          ${arb.isPriority ? '<span class="tag tag-prio">⭐ PRIORIDADE</span>' : ''}
+          <span class="tag tag-sport">${label}</span>
+        </div>
+        <div class="card-teams">${game.home_team} <span style="color:var(--muted);font-weight:300">vs</span> ${game.away_team}</div>
+        <div class="card-info">
+          <span>🕒 ${fmtDate(game.commence_time)}</span>
+          <span>🔄 <span class="${upd.cls}">${upd.text}</span></span>
+        </div>
+      </div>
+      <div>
+        <div class="profit-badge${arb.isPriority ? ' priority' : ''}">+${pct}%</div>
+        <div class="profit-sub">≈ R$ ${lucroR}</div>
+      </div>
+    </div>
+    <div class="card-grid">
+      <div class="bet-grid">
+        ${betBox('Casa', arb.m1, stake1)}
+        ${arb.mX ? betBox('Empate', arb.mX, stakeX) : ''}
+        ${betBox('Visitante', arb.m2, stake2)}
+      </div>
+    </div>`;
+  return card;
+}
+
+// ============================================================
+// SCANNER PRINCIPAL
+// ============================================================
+async function scan() {
+  const key    = document.getElementById('api-key').value.trim();
+  const esporte= document.getElementById('esporte').value;
+  const banca  = parseFloat(document.getElementById('banca').value) || 1000;
+  const status = document.getElementById('scan-status');
+  const btn    = document.getElementById('scan-btn');
+  const resDiv = document.getElementById('results');
+  const area   = document.getElementById('results-area');
+  const empty  = document.getElementById('empty-state');
+
+  if (!key) {
+    status.className = 'status-bar error';
+    status.innerHTML = '⚠️ API Key obrigatória. Cadastre-se gratuitamente em the-odds-api.com e insira sua chave.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Escaneando...';
+  status.className = 'status-bar info';
+  status.innerHTML = '<span class="spinner"></span>Conectando aos servidores e buscando odds...';
+  resDiv.innerHTML = '';
+  area.style.display = 'none';
+  empty.style.display = 'none';
+
+  try {
+    const url = `https://api.the-odds-api.com/v4/sports/${esporte}/odds` +
+      `?apiKey=${key}&regions=eu,uk,us&bookmakers=${BK_KEYS}&markets=h2h&oddsFormat=decimal&_=${Date.now()}`;
+
+    const res = await fetch(url);
+    const remaining = res.headers.get('x-requests-remaining');
+    const used      = res.headers.get('x-requests-used');
+    if (remaining !== null) document.getElementById('req-remain').textContent = remaining;
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+
+    const games = await res.json();
+
+    // Conta casas que apareceram na resposta
+    const bkSeen = new Set();
+    games.forEach(g => g.bookmakers.forEach(b => bkSeen.add(b.key)));
+    document.getElementById('bookie-count').textContent = bkSeen.size;
+    document.getElementById('last-scan').textContent = new Date().toLocaleTimeString('pt-BR');
+
+    // Filtra e ordena
+    const opps = games
+      .filter(g => g.sport_key.startsWith('soccer') || g.sport_key === 'basketball_nba')
+      .map(g => ({ game: g, arb: findArb(g) }))
+      .filter(x => x.arb)
+      .sort((a, b) => {
+        if (a.arb.isPriority !== b.arb.isPriority) return a.arb.isPriority ? -1 : 1;
+        return b.arb.lucro - a.arb.lucro;
+      });
+
+    document.getElementById('opp-count').textContent = opps.length;
+
+    if (opps.length === 0) {
+      empty.style.display = 'block';
+      status.className = 'status-bar info';
+      status.innerHTML = `📊 Varredura concluída em ${games.length} jogos. Nenhuma oportunidade de arbitragem no momento.`;
+    } else {
+      area.style.display = 'block';
+      opps.forEach(({ game, arb }) => resDiv.appendChild(renderCard(game, arb, banca)));
+      status.className = 'status-bar ok';
+      status.innerHTML = `✅ ${opps.length} oportunidade(s) encontrada(s) em ${games.length} jogos analisados. Requisições usadas hoje: ${used ?? '?'}`;
+    }
+
+  } catch (e) {
+    status.className = 'status-bar error';
+    status.innerHTML = `❌ Falha: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '▶ ESCANEAR';
+  }
+}
+
+// Permite pressionar Enter no campo da API Key
+document.getElementById('api-key').addEventListener('keydown', e => { if (e.key === 'Enter') scan(); });
+</script>
+</body>
+</html>
