@@ -1,1435 +1,1268 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Informatica PowerCenter — Guia de Arquitetura ETL</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0a0d14;
-    --bg2: #0f1320;
-    --bg3: #141929;
-    --surface: #1a2035;
-    --surface2: #1f2847;
-    --border: rgba(99,130,255,0.15);
-    --border2: rgba(99,130,255,0.28);
-    --accent: #6382ff;
-    --accent2: #a78bfa;
-    --gold: #f5c842;
-    --gold2: #fde68a;
-    --teal: #2dd4bf;
-    --red: #f87171;
-    --green: #4ade80;
-    --orange: #fb923c;
-    --text: #e2e8f0;
-    --text2: #94a3b8;
-    --text3: #64748b;
-    --glow: 0 0 40px rgba(99,130,255,0.18);
-    --card-shadow: 0 4px 24px rgba(0,0,0,0.45);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    overflow-x: hidden;
-  }
-
-  /* ── NOISE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 0; opacity: .5;
-  }
-
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 280px; min-width: 280px;
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
-    padding: 0;
-    position: fixed; top: 0; left: 0; bottom: 0;
-    overflow-y: auto; z-index: 100;
-    display: flex; flex-direction: column;
-  }
-
-  .sidebar::-webkit-scrollbar { width: 4px; }
-  .sidebar::-webkit-scrollbar-track { background: transparent; }
-  .sidebar::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
-
-  .sidebar-logo {
-    padding: 28px 24px 20px;
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0;
-    background: var(--bg2); z-index: 2;
-  }
-
-  .logo-tag {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: .2em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 6px;
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  .logo-tag::before {
-    content: ''; width: 18px; height: 2px;
-    background: var(--accent); display: inline-block;
-  }
-
-  .logo-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px; line-height: 1.3; color: var(--text);
-  }
-
-  .logo-title span { color: var(--gold); font-style: italic; }
-
-  .nav-section-label {
-    font-family: 'Syne', sans-serif;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: .2em; text-transform: uppercase;
-    color: var(--text3); padding: 20px 24px 8px;
-  }
-
-  .nav-item {
-    display: block; padding: 9px 24px 9px 20px;
-    color: var(--text2); text-decoration: none;
-    font-size: 13.5px; font-weight: 400;
-    border-left: 3px solid transparent;
-    transition: all .2s; line-height: 1.4;
-    position: relative;
-  }
-
-  .nav-item:hover {
-    color: var(--text); background: var(--surface);
-    border-left-color: var(--border2);
-  }
-
-  .nav-item.active {
-    color: var(--accent); font-weight: 500;
-    border-left-color: var(--accent);
-    background: rgba(99,130,255,0.08);
-  }
-
-  .nav-item .nav-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 9px; color: var(--text3);
-    margin-right: 8px; font-weight: 700;
-  }
-
-  .sidebar-footer {
-    margin-top: auto; padding: 20px 24px;
-    border-top: 1px solid var(--border);
-    font-size: 11px; color: var(--text3);
-    line-height: 1.6;
-  }
-
-  /* ── MAIN ── */
-  .main {
-    margin-left: 280px;
-    flex: 1; min-width: 0;
-    padding: 0;
-  }
-
-  /* ── HERO ── */
-  .hero {
-    background: linear-gradient(135deg, #0a0d14 0%, #111827 40%, #0f1e3a 100%);
-    padding: 80px 72px 72px;
-    border-bottom: 1px solid var(--border);
-    position: relative; overflow: hidden;
-  }
-
-  .hero::before {
-    content: 'ETL';
-    position: absolute; right: 60px; top: 30px;
-    font-family: 'Syne', sans-serif;
-    font-size: 200px; font-weight: 800;
-    color: rgba(99,130,255,0.04);
-    line-height: 1; pointer-events: none;
-    letter-spacing: -.04em;
-  }
-
-  .hero-eyebrow {
-    font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: .25em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 16px;
-    display: flex; align-items: center; gap: 10px;
-  }
-
-  .hero-eyebrow::after {
-    content: ''; flex: 1; max-width: 60px; height: 1px;
-    background: var(--accent); opacity: .5;
-  }
-
-  .hero h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 52px; line-height: 1.1;
-    font-weight: 400; color: var(--text);
-    margin-bottom: 16px; max-width: 700px;
-  }
-
-  .hero h1 em {
-    color: var(--gold); font-style: italic;
-  }
-
-  .hero-sub {
-    font-size: 17px; color: var(--text2);
-    max-width: 620px; line-height: 1.7;
-    font-weight: 300; margin-bottom: 36px;
-  }
-
-  .hero-chips {
-    display: flex; flex-wrap: wrap; gap: 10px;
-  }
-
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 100px; padding: 6px 14px;
-    font-size: 12px; font-weight: 500; color: var(--text2);
-  }
-
-  .chip-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-  }
-
-  /* ── CONTENT ── */
-  .content { padding: 60px 72px; }
-
-  section { margin-bottom: 80px; }
-
-  .section-header {
-    display: flex; align-items: flex-start; gap: 20px;
-    margin-bottom: 36px;
-  }
-
-  .section-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 42px; font-weight: 800;
-    color: rgba(99,130,255,0.15);
-    line-height: 1; min-width: 64px;
-    text-align: right;
-  }
-
-  .section-title-block { flex: 1; }
-
-  .section-eyebrow {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: .2em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 6px;
-  }
-
-  .section-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 32px; font-weight: 400;
-    line-height: 1.2; color: var(--text);
-  }
-
-  .section-title em { color: var(--gold); font-style: italic; }
-
-  p {
-    font-size: 15.5px; line-height: 1.85;
-    color: var(--text2); margin-bottom: 16px;
-    font-weight: 300;
-  }
-
-  p strong { color: var(--text); font-weight: 500; }
-
-  /* ── CARDS GRID ── */
-  .cards-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px; margin: 28px 0;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px;
-    transition: border-color .25s, transform .2s, box-shadow .25s;
-    position: relative; overflow: hidden;
-  }
-
-  .card:hover {
-    border-color: var(--border2);
-    transform: translateY(-3px);
-    box-shadow: var(--card-shadow), var(--glow);
-  }
-
-  .card-icon {
-    width: 42px; height: 42px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; margin-bottom: 14px;
-  }
-
-  .card h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 15px; font-weight: 700;
-    color: var(--text); margin-bottom: 8px;
-  }
-
-  .card p { font-size: 13.5px; line-height: 1.65; margin-bottom: 0; }
-
-  .card-badge {
-    display: inline-block; margin-top: 12px;
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    padding: 3px 10px; border-radius: 100px;
-  }
-
-  /* ── CALLOUT ── */
-  .callout {
-    border-radius: 14px; padding: 20px 24px;
-    border-left: 3px solid; margin: 24px 0;
-    font-size: 14.5px; line-height: 1.75;
-    color: var(--text2);
-  }
-
-  .callout-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: .15em; text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .callout.info { background: rgba(99,130,255,0.08); border-color: var(--accent); }
-  .callout.info .callout-title { color: var(--accent); }
-  .callout.warning { background: rgba(245,200,66,0.08); border-color: var(--gold); }
-  .callout.warning .callout-title { color: var(--gold); }
-  .callout.success { background: rgba(74,222,128,0.08); border-color: var(--green); }
-  .callout.success .callout-title { color: var(--green); }
-  .callout.danger { background: rgba(248,113,113,0.08); border-color: var(--red); }
-  .callout.danger .callout-title { color: var(--red); }
-
-  /* ── TABLE ── */
-  .table-wrap {
-    overflow-x: auto; border-radius: 14px;
-    border: 1px solid var(--border); margin: 28px 0;
-  }
-
-  table {
-    width: 100%; border-collapse: collapse;
-    font-size: 13.5px;
-  }
-
-  thead { background: var(--surface2); }
-
-  thead th {
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: .15em; text-transform: uppercase;
-    color: var(--text2); padding: 14px 18px;
-    text-align: left; white-space: nowrap;
-    border-bottom: 1px solid var(--border);
-  }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background .15s;
-  }
-
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(99,130,255,0.05); }
-
-  tbody td {
-    padding: 13px 18px; vertical-align: top;
-    color: var(--text2); line-height: 1.6;
-  }
-
-  tbody td:first-child {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700; color: var(--text);
-    font-size: 13px; white-space: nowrap;
-  }
-
-  .tag {
-    display: inline-block;
-    font-family: 'Syne', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    padding: 2px 8px; border-radius: 4px;
-  }
-
-  .tag-active { background: rgba(248,113,113,0.18); color: var(--red); }
-  .tag-passive { background: rgba(74,222,128,0.15); color: var(--green); }
-
-  /* ── COMPARISON BLOCK ── */
-  .compare-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 20px; margin: 28px 0;
-  }
-
-  .compare-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; overflow: hidden;
-  }
-
-  .compare-header {
-    padding: 16px 20px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; gap: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .compare-body { padding: 20px; }
-
-  .compare-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    margin-bottom: 14px; font-size: 13.5px;
-    color: var(--text2); line-height: 1.55;
-  }
-
-  .compare-item:last-child { margin-bottom: 0; }
-
-  .compare-item .ci-icon {
-    font-size: 14px; margin-top: 1px; flex-shrink: 0;
-  }
-
-  /* ── SCD CARDS ── */
-  .scd-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 20px; margin: 28px 0;
-  }
-
-  .scd-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px;
-    transition: border-color .25s, transform .2s;
-  }
-
-  .scd-card:hover {
-    border-color: var(--border2);
-    transform: translateY(-3px);
-  }
-
-  .scd-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 42px; font-weight: 800;
-    line-height: 1; margin-bottom: 12px;
-  }
-
-  .scd-card h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700;
-    color: var(--text); margin-bottom: 8px;
-  }
-
-  .scd-card p { font-size: 13px; line-height: 1.65; margin-bottom: 12px; }
-
-  .scd-steps { list-style: none; }
-  .scd-steps li {
-    font-size: 12.5px; color: var(--text2);
-    padding: 6px 0; border-bottom: 1px solid var(--border);
-    display: flex; gap: 8px; align-items: flex-start;
-    line-height: 1.5;
-  }
-  .scd-steps li:last-child { border-bottom: none; }
-  .scd-steps li::before {
-    content: '→'; color: var(--accent);
-    font-size: 11px; margin-top: 2px; flex-shrink: 0;
-  }
-
-  /* ── CACHE STATES ── */
-  .cache-states {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 16px; margin: 24px 0;
-  }
-
-  .cache-state {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px;
-    text-align: center;
-    transition: transform .2s, border-color .25s;
-  }
-
-  .cache-state:hover { transform: translateY(-2px); border-color: var(--border2); }
-
-  .cache-val {
-    font-family: 'Syne', sans-serif;
-    font-size: 52px; font-weight: 800;
-    line-height: 1; margin-bottom: 8px;
-  }
-
-  .cache-label {
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 700;
-    margin-bottom: 10px; color: var(--text);
-  }
-
-  .cache-desc { font-size: 12.5px; color: var(--text2); line-height: 1.6; }
-
-  /* ── ARCH DIAGRAM ── */
-  .arch-diagram {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 32px;
-    margin: 28px 0; text-align: center;
-  }
-
-  .arch-layers {
-    display: flex; flex-direction: column; gap: 12px;
-    max-width: 600px; margin: 0 auto;
-  }
-
-  .arch-layer {
-    background: var(--bg3); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 16px 20px;
-    display: flex; align-items: center; gap: 14px;
-    text-align: left; position: relative;
-    transition: border-color .2s;
-  }
-
-  .arch-layer:hover { border-color: var(--accent); }
-
-  .arch-layer-icon { font-size: 24px; }
-
-  .arch-layer-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px; font-weight: 700; color: var(--text);
-  }
-
-  .arch-layer-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
-
-  .arch-arrow {
-    text-align: center; font-size: 20px;
-    color: var(--text3); line-height: 1;
-    margin: -4px 0;
-  }
-
-  /* ── CODE BLOCK ── */
-  .code-block {
-    background: #0a0e1a; border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px 24px;
-    font-family: 'Courier New', monospace;
-    font-size: 13px; line-height: 1.7;
-    color: #a5b4fc; margin: 20px 0;
-    overflow-x: auto;
-  }
-
-  .code-block .kw { color: #f472b6; }
-  .code-block .fn { color: #34d399; }
-  .code-block .str { color: #fbbf24; }
-  .code-block .op { color: #94a3b8; }
-  .code-block .cm { color: var(--text3); font-style: italic; }
-
-  /* ── PERF SECTION ── */
-  .perf-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 16px; margin: 24px 0;
-  }
-
-  .perf-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px;
-    transition: transform .2s, border-color .2s;
-  }
-
-  .perf-card:hover { transform: translateY(-2px); border-color: var(--border2); }
-
-  .perf-card h4 {
-    font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .perf-card ul { list-style: none; }
-  .perf-card ul li {
-    font-size: 13px; color: var(--text2);
-    padding: 5px 0; border-bottom: 1px solid var(--border);
-    display: flex; gap: 8px; line-height: 1.5;
-  }
-  .perf-card ul li:last-child { border-bottom: none; }
-  .perf-card ul li::before { content: '▸'; font-size: 9px; margin-top: 4px; flex-shrink: 0; }
-
-  /* ── TOC PROGRESS ── */
-  .reading-progress {
-    position: fixed; top: 0; left: 280px; right: 0;
-    height: 2px; background: transparent; z-index: 200;
-  }
-
-  .reading-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--gold));
-    width: 0; transition: width .1s;
-  }
-
-  /* ── DIVIDER ── */
-  .divider {
-    height: 1px; background: var(--border);
-    margin: 40px 0;
-  }
-
-  /* ── HIGHLIGHT BOX ── */
-  .highlight-box {
-    background: linear-gradient(135deg, rgba(99,130,255,0.1), rgba(167,139,250,0.08));
-    border: 1px solid rgba(99,130,255,0.25);
-    border-radius: 16px; padding: 28px 32px; margin: 28px 0;
-  }
-
-  .highlight-box h4 {
-    font-family: 'Syne', sans-serif;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 12px;
-  }
-
-  .highlight-box p { font-size: 14.5px; margin-bottom: 10px; }
-  .highlight-box p:last-child { margin-bottom: 0; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 900px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; }
-    .hero { padding: 48px 32px; }
-    .content { padding: 40px 32px; }
-    .scd-grid, .compare-grid, .cache-states, .perf-grid { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 36px; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guia detalhado de mineração - Minecraft Bedrock 26</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10130f;
+      --panel: #1c2219;
+      --panel-2: #252d21;
+      --panel-3: #12170f;
+      --line: #4a5940;
+      --text: #f2f6ed;
+      --muted: #bac7b0;
+      --accent: #e0b75e;
+      --accent-2: #79c7b5;
+      --good: #88d97a;
+      --warn: #f0c66d;
+      --danger: #ee907e;
+      --coal: #303238;
+      --iron: #d5a36c;
+      --copper: #d98151;
+      --gold: #f3ca4e;
+      --redstone: #e13e3e;
+      --lapis: #3f76d8;
+      --diamond: #75d7e6;
+      --emerald: #45c46c;
+      --quartz: #f4ead8;
+      --nethergold: #e2ad3e;
+      --debris: #7d5c4d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        linear-gradient(180deg, rgba(16, 19, 15, 0.94), rgba(16, 19, 15, 0.99)),
+        radial-gradient(circle at 8% 0%, rgba(121, 199, 181, 0.16), transparent 34%),
+        radial-gradient(circle at 100% 15%, rgba(224, 183, 94, 0.12), transparent 32%),
+        #10130f;
+      color: var(--text);
+    }
+
+    a { color: var(--accent); }
+
+    .shell {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 54px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 860px;
+    }
+
+    .seedbox, .toolbar, .panel, .layer-card, .method-card, .profile-card {
+      border: 1px solid var(--line);
+      background: rgba(28, 34, 25, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .seedbox {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .seedbox strong {
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr auto;
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      position: sticky;
+      top: 10px;
+      z-index: 3;
+    }
+
+    input, select, button {
+      font: inherit;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #12170f;
+      color: var(--text);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 13px;
+      background: var(--panel-2);
+    }
+
+    button:hover, input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224, 183, 94, 0.16);
+    }
+
+    .panel {
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #252d21;
+      font-size: 19px;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .layer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .layer-card {
+      min-height: 168px;
+      padding: 13px;
+      display: grid;
+      gap: 10px;
+      border-color: rgba(74, 89, 64, 0.85);
+      background: #141a12;
+    }
+
+    .layer-head {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .ore-dot {
+      width: 26px;
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      background: var(--ore);
+      box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .layer-card h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .layer-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .mini {
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      border-radius: 6px;
+      background: #10150e;
+      padding: 8px;
+      min-height: 58px;
+    }
+
+    .mini span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .mini b {
+      display: block;
+      margin-top: 5px;
+      line-height: 1.22;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(121, 199, 181, 0.5);
+      background: rgba(121, 199, 181, 0.11);
+      color: #c3f1e9;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .detail-shell {
+      display: none;
+      gap: 16px;
+    }
+
+    .detail-shell.active {
+      display: grid;
+    }
+
+    .selected-hero {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(121, 199, 181, 0.12), transparent 42%),
+        #151b13;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .selected-title {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .selected-title .ore-dot {
+      width: 38px;
+    }
+
+    .selected-title h2 {
+      margin: 0;
+      font-size: 27px;
+      line-height: 1.1;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .fact {
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      border-radius: 7px;
+      background: #10150e;
+      padding: 9px;
+      min-height: 68px;
+    }
+
+    .fact span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .fact b {
+      display: block;
+      margin-top: 5px;
+      line-height: 1.25;
+      font-size: 15px;
+    }
+
+    .profile-grid, .method-grid, .route-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .profile-card {
+      padding: 13px;
+      background: #141a12;
+    }
+
+    .profile-card h3 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+
+    .profile-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .method-card {
+      overflow: hidden;
+      background: #141a12;
+    }
+
+    .method-top {
+      padding: 12px;
+      border-bottom: 1px solid rgba(74, 89, 64, 0.75);
+      display: grid;
+      gap: 8px;
+    }
+
+    .method-top h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .method-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 23px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(224, 183, 94, 0.5);
+      background: rgba(224, 183, 94, 0.11);
+      color: #ffe4aa;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .method-body {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .method-body p {
+      margin: 0;
+    }
+
+    .method-body strong {
+      color: var(--text);
+    }
+
+    details {
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      border-radius: 7px;
+      background: #10150e;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 10px 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .steps {
+      padding: 0 12px 12px;
+    }
+
+    .steps ol, .steps ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .pros, .cons {
+      border-radius: 7px;
+      padding: 10px;
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      background: #10150e;
+    }
+
+    .pros b { color: var(--good); }
+    .cons b { color: var(--danger); }
+
+    .diagram {
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      border-radius: 8px;
+      background: #10150e;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .diagram-title {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .blocks {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 3px;
+    }
+
+    .cell {
+      min-height: 20px;
+      border-radius: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: #3d403c;
+    }
+
+    .air { background: #20271f; border-color: rgba(121, 199, 181, 0.2); }
+    .branch { background: #293d36; border-color: rgba(121, 199, 181, 0.58); }
+    .ore { background: var(--ore); }
+    .lava { background: #e46632; }
+    .bed { background: #77543d; }
+    .safe { background: #3f6148; }
+    .water { background: #235e9a; }
+    .mountain { background: #60665f; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      margin-right: 4px;
+      vertical-align: -2px;
+    }
+
+    .route {
+      border: 1px solid rgba(74, 89, 64, 0.75);
+      border-radius: 8px;
+      background: #141a12;
+      padding: 12px;
+    }
+
+    .route h3 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+
+    .route p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .route a {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sources {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--muted);
+      background: rgba(18, 23, 15, 0.7);
+      margin-top: 12px;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 980px) {
+      header, .toolbar, .layer-grid, .summary-grid, .profile-grid, .method-grid, .route-grid, .split {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        position: static;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<div class="reading-progress">
-  <div class="reading-progress-bar" id="progressBar"></div>
-</div>
-
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-tag">Guia Técnico</div>
-    <div class="logo-title">Informatica <span>PowerCenter</span></div>
-  </div>
-
-  <div class="nav-section-label">Fundamentos</div>
-  <a href="#etl-intro" class="nav-item active"><span class="nav-num">01</span> Paradigma ETL</a>
-  <a href="#arquitetura" class="nav-item"><span class="nav-num">02</span> Arquitetura SOA</a>
-
-  <div class="nav-section-label">Transformações</div>
-  <a href="#transformacoes" class="nav-item"><span class="nav-num">03</span> Ativas vs Passivas</a>
-  <a href="#tabela-trans" class="nav-item"><span class="nav-num">04</span> Tabela de Transformações</a>
-
-  <div class="nav-section-label">Lookup</div>
-  <a href="#lookup" class="nav-item"><span class="nav-num">05</span> Lookup: Conectado vs Desconectado</a>
-  <a href="#cache-dinamico" class="nav-item"><span class="nav-num">06</span> Cache Dinâmico</a>
-  <a href="#joiner-vs-lookup" class="nav-item"><span class="nav-num">07</span> Joiner vs Lookup</a>
-
-  <div class="nav-section-label">Estado e Módulos</div>
-  <a href="#parametros" class="nav-item"><span class="nav-num">08</span> Parâmetros e Variáveis</a>
-  <a href="#mapplets" class="nav-item"><span class="nav-num">09</span> Mapplets e Reusabilidade</a>
-
-  <div class="nav-section-label">Dimensões e Carga</div>
-  <a href="#cblo" class="nav-item"><span class="nav-num">10</span> CBLO e Target Load Plan</a>
-  <a href="#scd" class="nav-item"><span class="nav-num">11</span> Slowly Changing Dimensions</a>
-
-  <div class="nav-section-label">Performance</div>
-  <a href="#performance" class="nav-item"><span class="nav-num">12</span> Tuning e Gargalos</a>
-  <a href="#pdo" class="nav-item"><span class="nav-num">13</span> Pushdown Optimization</a>
-  <a href="#nuvem" class="nav-item"><span class="nav-num">14</span> IICS e Nuvem</a>
-
-  <div class="sidebar-footer">
-    Arquitetura e Engenharia de Integração de Dados — Guia completo de estudo para ETL empresarial com Informatica PowerCenter.
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- HERO -->
-  <header class="hero">
-    <div class="hero-eyebrow">Engenharia de Dados</div>
-    <h1>Dominando o Ecossistema<br><em>Informatica PowerCenter</em></h1>
-    <p class="hero-sub">Um guia completo de arquitetura ETL: desde os fundamentos do paradigma Extract-Transform-Load até técnicas avançadas de tuning, modelagem dimensional e otimização em nuvem.</p>
-    <div class="hero-chips">
-      <span class="chip"><span class="chip-dot" style="background:#6382ff"></span> ETL / ELT</span>
-      <span class="chip"><span class="chip-dot" style="background:#f5c842"></span> PowerCenter</span>
-      <span class="chip"><span class="chip-dot" style="background:#2dd4bf"></span> Data Warehouse</span>
-      <span class="chip"><span class="chip-dot" style="background:#fb923c"></span> SCD Tipos 1/2/3</span>
-      <span class="chip"><span class="chip-dot" style="background:#4ade80"></span> Performance Tuning</span>
-      <span class="chip"><span class="chip-dot" style="background:#a78bfa"></span> IICS / Nuvem</span>
-    </div>
-  </header>
-
-  <div class="content">
-
-    <!-- 01 - ETL INTRO -->
-    <section id="etl-intro">
-      <div class="section-header">
-        <div class="section-num">01</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Fundamentos</div>
-          <h2 class="section-title">O Paradigma <em>ETL</em></h2>
-        </div>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>Guia detalhado de mineração</h1>
+        <p class="sub">
+          Escolha um minério para abrir métodos completos: melhor camada, alternativas, custo, risco, passo a passo e quando cada técnica vale a pena. Sem filtro, a página mostra só a referência rápida de camadas.
+        </p>
       </div>
-
-      <p>A fundação de qualquer ecossistema de Data Warehousing (DW) e Business Intelligence (BI) reside na robustez de sua camada de integração de dados. Sistemas OLTP operam em silos isolados com modelagens normalizadas para velocidade de gravação — modelos inerentemente ineficientes para análises complexas. É nesse abismo que a disciplina de ETL se estabelece.</p>
-
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-icon" style="background:rgba(99,130,255,0.15)">📥</div>
-          <h3>Extract</h3>
-          <p>Extração sistemática de dados de origens heterogêneas — bancos relacionais, arquivos planos, APIs, sistemas legados COBOL/VSAM e mais.</p>
-          <span class="card-badge" style="background:rgba(99,130,255,0.15);color:var(--accent)">Etapa 1</span>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(245,200,66,0.12)">⚙️</div>
-          <h3>Transform</h3>
-          <p>Transformação algorítmica e estrutural dos dados brutos: limpeza, padronização, enriquecimento, mascaramento e regras de negócio aplicadas em voo.</p>
-          <span class="card-badge" style="background:rgba(245,200,66,0.12);color:var(--gold)">Etapa 2</span>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(74,222,128,0.12)">📤</div>
-          <h3>Load</h3>
-          <p>Carga no repositório analítico centralizado, modelado em esquemas estrela ou floco de neve (OLAP), otimizado para consultas e agregações.</p>
-          <span class="card-badge" style="background:rgba(74,222,128,0.12);color:var(--green)">Etapa 3</span>
-        </div>
+      <div class="seedbox">
+        <span>Seed de referência</span>
+        <strong>766250999711968938</strong>
+        <span>Bedrock 26.0 - 26.23, Realm vanilla</span>
       </div>
+    </header>
 
-      <div class="callout info">
-        <div class="callout-title">💡 ETL vs ELT</div>
-        O termo <strong>ELT</strong> (Extract, Load, Transform) ganha tração com data lakes e processamento em nuvem, onde a transformação ocorre no motor do banco destino. O ETL clássico permanece vital por permitir <strong>mascaramento de dados (Data Masking)</strong> em trânsito — protegendo dados sensíveis antes mesmo de tocarem o ambiente destino.
+    <section class="toolbar" aria-label="Filtros">
+      <select id="oreSelect" aria-label="Filtrar por minério">
+        <option value="">Camadas rápidas: todos os minérios</option>
+      </select>
+      <input id="search" type="search" placeholder="Buscar na tabela rápida">
+      <button id="reset" type="button">Limpar</button>
+    </section>
+
+    <section class="panel" id="layerPanel">
+      <h2>Camadas rápidas</h2>
+      <div class="panel-body">
+        <p class="hint">
+          Essa é a visão sem filtro: só o necessário para decidir a altura. Para detalhes de método, escolha um minério no seletor acima.
+        </p>
+        <div class="layer-grid" id="layerGrid"></div>
+        <div class="empty-state hidden" id="emptyState">Nada encontrado nessa busca.</div>
       </div>
     </section>
 
-    <!-- 02 - ARQUITETURA -->
-    <section id="arquitetura">
-      <div class="section-header">
-        <div class="section-num">02</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Topologia</div>
-          <h2 class="section-title">Arquitetura <em>SOA</em> do PowerCenter</h2>
-        </div>
-      </div>
+    <section class="detail-shell" id="detailShell">
+      <div class="selected-hero" id="selectedHero"></div>
 
-      <p>O Informatica PowerCenter opera em uma <strong>Arquitetura Orientada a Serviços (SOA)</strong>, segregada em Domínios e Nós (Domains and Nodes), permitindo isolamento de processos intensivos em rede daqueles intensivos em processamento.</p>
+      <section class="panel">
+        <h2>Qual método escolher?</h2>
+        <div class="panel-body profile-grid" id="profileGrid"></div>
+      </section>
 
-      <div class="arch-diagram">
-        <div class="arch-layers">
-          <div class="arch-layer">
-            <div class="arch-layer-icon">🧩</div>
-            <div>
-              <div class="arch-layer-name">Repository Service</div>
-              <div class="arch-layer-desc">Espinha dorsal — armazena todos os metadados: conexões, mappings, workflows, configurações. Gerenciado sobre SGBD relacional.</div>
-            </div>
-          </div>
-          <div class="arch-arrow">↕</div>
-          <div class="arch-layer">
-            <div class="arch-layer-icon">⚡</div>
-            <div>
-              <div class="arch-layer-name">Integration Service (pmserver)</div>
-              <div class="arch-layer-desc">Motor de execução. Lê metadados do repositório, gerencia agendamentos, parseia parameter files e inicia sessões via TCP/IP.</div>
-            </div>
-          </div>
-          <div class="arch-arrow">↕</div>
-          <div class="arch-layer">
-            <div class="arch-layer-icon">🔧</div>
-            <div>
-              <div class="arch-layer-name">DTM – Data Transformation Manager</div>
-              <div class="arch-layer-desc">Processo filho do Integration Service. Aloca buffers de RAM, divide sessão em Reader / Transformation / Writer Threads.</div>
-            </div>
-          </div>
-          <div class="arch-arrow">↕</div>
-          <div class="arch-layer">
-            <div class="arch-layer-icon">⚖️</div>
-            <div>
-              <div class="arch-layer-name">Load Balancer</div>
-              <div class="arch-layer-desc">Despacha tarefas inteligentemente pelos nós do grid para escalabilidade ideal e prevenção de esgotamento de hardware.</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <section class="panel">
+        <h2>Métodos detalhados</h2>
+        <div class="panel-body method-grid" id="methodGrid"></div>
+      </section>
 
-      <div class="callout warning">
-        <div class="callout-title">⚠️ Boas Práticas de Arquitetura</div>
-        Em ambientes corporativos, separe as operações de <strong>gateway</strong> (comunicação e administração) dos <strong>serviços de aplicação</strong>. Uma carga massiva consumindo CPU no Integration Service não deve interferir na responsividade do Repository Service para manter o cluster operacional.
-      </div>
+      <section class="panel">
+        <h2>Diagramas didáticos</h2>
+        <div class="panel-body method-grid" id="diagramGrid"></div>
+      </section>
 
-      <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
-        <div class="card">
-          <div class="card-icon" style="background:rgba(45,212,191,0.12)">🔌</div>
-          <h3>Acesso via pmcmd</h3>
-          <p>O daemon <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">pmserver</code> aceita requisições de clientes visuais <em>e</em> de linha de comando via <strong>pmcmd</strong>, permitindo automação e agendamento externo.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(167,139,250,0.12)">🔗</div>
-          <h3>Conectividade</h3>
-          <p>O Integration Service conecta-se a bancos de origem e destino via <strong>drivers ODBC</strong> ou <strong>drivers nativos</strong> otimizados para máxima performance de I/O.</p>
-        </div>
-      </div>
+      <section class="panel">
+        <h2>Biomas e rotas na seed</h2>
+        <div class="panel-body route-grid" id="routeGrid"></div>
+      </section>
     </section>
 
-    <!-- 03 - TRANSFORMAÇÕES -->
-    <section id="transformacoes">
-      <div class="section-header">
-        <div class="section-num">03</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Mecânica</div>
-          <h2 class="section-title">Transformações: <em>Ativas vs Passivas</em></h2>
-        </div>
-      </div>
-
-      <p>A unidade atômica de manipulação lógica dentro de um Mapping é a <strong>Transformação</strong>. Toda transformação é classificada em uma de duas categorias mutuamente exclusivas: <strong>Ativa</strong> ou <strong>Passiva</strong>. Essa distinção não é teórica — ela dita regras de validação do motor, afeta a estrutura do fluxo de dados e impacta performance.</p>
-
-      <div class="compare-grid">
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(74,222,128,0.08);color:var(--green)">
-            <span>🟢</span> Transformações Passivas
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">✅</span><span>Não alteram o número de linhas (1 entrada = 1 saída)</span></div>
-            <div class="compare-item"><span class="ci-icon">✅</span><span>Não alteram a ordem de execução dos registros</span></div>
-            <div class="compare-item"><span class="ci-icon">✅</span><span>Não influenciam limites transacionais (COMMIT/ROLLBACK)</span></div>
-            <div class="compare-item"><span class="ci-icon">⚡</span><span>Execução rápida e de baixo custo de I/O — sem reestruturação de blocos de memória</span></div>
-            <div class="compare-item"><span class="ci-icon">📌</span><span><strong>Exemplos:</strong> Expression, Sequence Generator, Lookup (modo passivo)</span></div>
-          </div>
-        </div>
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(248,113,113,0.08);color:var(--red)">
-            <span>🔴</span> Transformações Ativas
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">🔄</span><span>Podem alterar a cardinalidade (multiplicar, descartar ou agregar linhas)</span></div>
-            <div class="compare-item"><span class="ci-icon">🔄</span><span>Podem modificar a ordem física dos registros no pipeline</span></div>
-            <div class="compare-item"><span class="ci-icon">🔄</span><span>Podem definir e quebrar limites transacionais baseados em lógica</span></div>
-            <div class="compare-item"><span class="ci-icon">⚠️</span><span>Fluxos de duas transformações ativas não podem ser fundidos diretamente sem ponto de junção explícito</span></div>
-            <div class="compare-item"><span class="ci-icon">📌</span><span><strong>Exemplos:</strong> Filter, Aggregator, Sorter, Router, Joiner, Normalizer</span></div>
-          </div>
-        </div>
+    <section class="panel">
+      <h2>Referências usadas</h2>
+      <div class="panel-body">
+        <ul class="sources">
+          <li>PDF fornecido: Melhor forma de mineração no Minecraft estável atual.</li>
+          <li><a href="https://beacoland.com/wiki/minecraft-ore-generation/" target="_blank" rel="noreferrer">Beacoland Ore Generation 1.21</a>: níveis Y e notas de biome.</li>
+          <li><a href="https://www.g-portal.com/wiki/en/minecraft-ore-distribution/" target="_blank" rel="noreferrer">GPORTAL Ore Distribution</a>: faixas, picos e ferramenta mínima.</li>
+          <li><a href="https://www.chunkbase.com/apps/biome-finder" target="_blank" rel="noreferrer">Chunkbase Biome Finder</a>: consulta de biomas na seed.</li>
+          <li><a href="https://www.chunkbase.com/apps/seed-map" target="_blank" rel="noreferrer">Chunkbase Seed Map</a>: limitações e mapa da seed.</li>
+        </ul>
       </div>
     </section>
+  </main>
 
-    <!-- 04 - TABELA -->
-    <section id="tabela-trans">
-      <div class="section-header">
-        <div class="section-num">04</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Referência</div>
-          <h2 class="section-title">Tabela de <em>Transformações</em></h2>
-        </div>
-      </div>
+  <script>
+    const seed = "766250999711968938";
+    const biomeBase = `https://www.chunkbase.com/apps/biome-finder#seed=${seed}&platform=bedrock_26_0&dimension=overworld`;
+    const netherBase = `https://www.chunkbase.com/apps/seed-map#seed=${seed}&platform=bedrock_26_0&dimension=nether`;
 
-      <p>Referência completa das principais transformações do PowerCenter com classificação, mecanismo de ação e impacto no pipeline.</p>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Transformação</th>
-              <th>Categoria</th>
-              <th>Mecanismo de Ação e Impacto no Pipeline</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Expression</td>
-              <td><span class="tag tag-passive">Passiva</span></td>
-              <td>Calcula valores e manipula dados em nível de linha. Retorna resultados sem interagir com outros registros, mantendo intacta a contagem do lote.</td>
-            </tr>
-            <tr>
-              <td>Filter</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Avalia dados contra condição booleana e descarta ativamente as linhas que retornam FALSO, diminuindo o volume total enviado ao alvo.</td>
-            </tr>
-            <tr>
-              <td>Aggregator</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Realiza cálculos agregados (soma, média, max, min). Exige bloqueio temporário em cachê de memória até que o agrupamento (Group By) seja completo, alterando profundamente a granularidade dos dados.</td>
-            </tr>
-            <tr>
-              <td>Router</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Testa múltiplas condições simultaneamente (diferente do Filter, que testa apenas uma) e distribui os mesmos dados para múltiplos caminhos paralelos no mapeamento.</td>
-            </tr>
-            <tr>
-              <td>Sorter</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Bloqueia as linhas para reordenar fisicamente os dados por Sort Key. Pode purgar duplicatas ao ativar a opção <em>Distinct</em>.</td>
-            </tr>
-            <tr>
-              <td>Sequence Generator</td>
-              <td><span class="tag tag-passive">Passiva</span></td>
-              <td>Fabrica um fluxo ininterrupto de chaves numéricas sequenciais, garantindo unicidade sem descartar fluxos adjacentes.</td>
-            </tr>
-            <tr>
-              <td>Update Strategy</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Modifica dinamicamente a natureza transacional do registro (DD_INSERT, DD_UPDATE, DD_DELETE, DD_REJECT), ditando como o motor fará a persistência física no banco destino.</td>
-            </tr>
-            <tr>
-              <td>Joiner</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Combina fluxos de dados de fontes distintas. Dependendo do tipo de junção e dos dados, pode causar amplificação (produto cartesiano) ou redução substancial de registros.</td>
-            </tr>
-            <tr>
-              <td>Normalizer</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Pivota registros achatados em múltiplas linhas relacionais — ideal para converter arrays de arquivos VSAM/COBOL, multiplicando o output.</td>
-            </tr>
-            <tr>
-              <td>Transaction Control</td>
-              <td><span class="tag tag-active">Ativa</span></td>
-              <td>Sobrescreve as regras de commit de sessão, forçando salvamentos ou reversões com base em avaliações lógicas intra-registro no fluxo.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 05 - LOOKUP -->
-    <section id="lookup">
-      <div class="section-header">
-        <div class="section-num">05</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Lookup Transformation</div>
-          <h2 class="section-title"><em>Conectado</em> vs Desconectado</h2>
-        </div>
-      </div>
-
-      <p>A transformação Lookup é indiscutivelmente o componente mais onipresente e complexo do PowerCenter. Sua função é realizar pesquisas em tabelas, visões ou arquivos planos, retornando valores baseados em chaves de correspondência.</p>
-
-      <div class="compare-grid">
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(99,130,255,0.1);color:var(--accent)">
-            <span>🔗</span> Lookup Conectado
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">📡</span><span>Integrado ao fluxo principal, recebe valores de entrada diretamente das transformações anteriores</span></div>
-            <div class="compare-item"><span class="ci-icon">📤</span><span><strong>Retorna múltiplas colunas</strong> como portas de saída para transformações a jusante</span></div>
-            <div class="compare-item"><span class="ci-icon">🔄</span><span>Suporta cachê <strong>Estático e Dinâmico</strong></span></div>
-            <div class="compare-item"><span class="ci-icon">🎯</span><span>Em caso de <em>no match</em>: retorna <strong>valor padrão</strong> definido pelo usuário</span></div>
-            <div class="compare-item"><span class="ci-icon">📦</span><span>Cachê inclui colunas de condição + todas as colunas mapeadas como saída</span></div>
-          </div>
-        </div>
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(167,139,250,0.1);color:var(--accent2)">
-            <span>📞</span> Lookup Desconectado
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">📞</span><span>Invocado como função via sintaxe <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11.5px">:LKP.NOME(param)</code> em outra transformação</span></div>
-            <div class="compare-item"><span class="ci-icon">1️⃣</span><span><strong>Retorna apenas UMA coluna</strong> — designada como Return Port</span></div>
-            <div class="compare-item"><span class="ci-icon">🔒</span><span>Suporta apenas cachê <strong>Estático</strong> (proibido dinâmico)</span></div>
-            <div class="compare-item"><span class="ci-icon">🚫</span><span>Em caso de <em>no match</em>: retorna incondicionalmente <strong>NULL</strong></span></div>
-            <div class="compare-item"><span class="ci-icon">♻️</span><span>Pode ser acionado <strong>múltiplas vezes</strong> por diferentes ramificações com variáveis diferentes — alta reutilização</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="callout success">
-        <div class="callout-title">💎 Quando usar o Lookup Desconectado</div>
-        Ideal para <strong>pesquisas condicionais</strong> — onde a tabela só precisa ser acessada se o registro satisfizer certas lógicas. Evita instanciar múltiplas cópias redundantes do mesmo lookup no mapeamento, economizando memória e processamento.
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Critério</th>
-              <th>Lookup Conectado</th>
-              <th>Lookup Desconectado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Mecanismo de Entrada</td>
-              <td>Portas físicas da malha principal</td>
-              <td>Parâmetros via sintaxe :LKP</td>
-            </tr>
-            <tr>
-              <td>Capacidade de Retorno</td>
-              <td><strong>Múltiplas colunas</strong></td>
-              <td><strong>1 coluna</strong> (Return Port)</td>
-            </tr>
-            <tr>
-              <td>Tipo de Cachê</td>
-              <td>Estático ou Dinâmico</td>
-              <td>Apenas Estático</td>
-            </tr>
-            <tr>
-              <td>Reação a No Match</td>
-              <td>Valor padrão do usuário</td>
-              <td>NULL incondicional</td>
-            </tr>
-            <tr>
-              <td>Reuso no Mapeamento</td>
-              <td>Linear — uma via de pipeline</td>
-              <td>Múltiplas chamadas independentes</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 06 - CACHE DINÂMICO -->
-    <section id="cache-dinamico">
-      <div class="section-header">
-        <div class="section-num">06</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Lookup Avançado</div>
-          <h2 class="section-title">Cachê Dinâmico e <em>NewLookupRow</em></h2>
-        </div>
-      </div>
-
-      <p>O <strong>cachê dinâmico</strong> é atualizado instantaneamente em sincronia com o processamento — diferente do cachê estático, que constrói uma fotografia da base e a mantém imutável durante toda a execução.</p>
-
-      <p>Quando habilitado, o sistema insere implicitamente a porta de sistema <strong>NewLookupRow</strong>. Seu valor determina o que fazer com cada registro processado:</p>
-
-      <div class="cache-states">
-        <div class="cache-state">
-          <div class="cache-val" style="color:var(--text3)">0</div>
-          <div class="cache-label">Unchanged</div>
-          <div class="cache-desc">Chave já existe no cachê <em>e</em> o payload é idêntico. Nenhuma operação necessária. <strong>Descartar este registro</strong> para evitar sobrecarga no banco destino.</div>
-        </div>
-        <div class="cache-state">
-          <div class="cache-val" style="color:var(--green)">1</div>
-          <div class="cache-label">Insert</div>
-          <div class="cache-desc">Chave desconhecida para o cachê. Registro é <strong>novo</strong> — o motor insere no cachê e o fluxo deve realizar DD_INSERT no destino.</div>
-        </div>
-        <div class="cache-state">
-          <div class="cache-val" style="color:var(--gold)">2</div>
-          <div class="cache-label">Update</div>
-          <div class="cache-desc">Chave existe no cachê mas o <strong>payload diverge</strong>. O motor atualiza o cachê com os novos dados. O fluxo deve realizar DD_UPDATE no destino.</div>
-        </div>
-      </div>
-
-      <div class="callout danger">
-        <div class="callout-title">🚨 Risco de Dessincronização</div>
-        O principal risco do cachê dinâmico é o <strong>abismo de dessincronização</strong> entre o buffer em RAM do ETL e o espelho físico no banco destino. A coordenação deve ser total: linhas com NewLookupRow=0 vão para descarte (Router), =1 fluem para INSERT limpo, =2 passam pela Update Strategy com DD_UPDATE.
-      </div>
-    </section>
-
-    <!-- 07 - JOINER VS LOOKUP -->
-    <section id="joiner-vs-lookup">
-      <div class="section-header">
-        <div class="section-num">07</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Arquitetura de Cruzamento</div>
-          <h2 class="section-title"><em>Joiner</em> vs Lookup</h2>
-        </div>
-      </div>
-
-      <p>Um dos temas mais recorrentes em entrevistas técnicas: quando usar Joiner e quando usar Lookup para cruzar conjuntos de dados.</p>
-
-      <div class="compare-grid">
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(251,146,60,0.08);color:var(--orange)">
-            <span>🔀</span> Joiner Transformation
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">⚙️</span><span>Absorve dois fluxos assíncronos (Detail + Master) com alocação voraz de cache local</span></div>
-            <div class="compare-item"><span class="ci-icon">=</span><span>Requer condições de <strong>igualdade exata (=)</strong> — não suporta ≤, ≥, ≠</span></div>
-            <div class="compare-item"><span class="ci-icon">🔗</span><span>Suporta todos os tipos de junção SQL: Inner, Left Outer, Right Outer, Full Outer</span></div>
-            <div class="compare-item"><span class="ci-icon">🌐</span><span>Pode integrar <strong>fontes heterogêneas</strong> — APIs, arquivos, bancos distintos</span></div>
-            <div class="compare-item"><span class="ci-icon">⚠️</span><span>Pesado em I/O; evite para tabelas de trilhões de linhas com relação M×N</span></div>
-          </div>
-        </div>
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(99,130,255,0.1);color:var(--accent)">
-            <span>🔍</span> Lookup Transformation
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">🎯</span><span>Opera nativamente como um <strong>Left Outer Join</strong> — preserva todos os registros da fonte primária</span></div>
-            <div class="compare-item"><span class="ci-icon">≤≥</span><span>Suporta condições não-lineares: <strong>≤, ≥, ≠</strong> — impossível no Joiner</span></div>
-            <div class="compare-item"><span class="ci-icon">⚡</span><span>Extremamente rápido quando a tabela lookup cabe inteiramente no cachê em RAM</span></div>
-            <div class="compare-item"><span class="ci-icon">🔒</span><span>Limitado a fontes homogêneas — precisa ser acessível como tabela/view/arquivo</span></div>
-            <div class="compare-item"><span class="ci-icon">📊</span><span>Preferível para tabelas de referência pequenas e médias com chave restritiva forte</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="highlight-box">
-        <h4>🧠 Regra Heurística</h4>
-        <p>Use <strong>Lookup</strong> quando a tabela secundária é suficientemente pequena para caber em cachê e você precisa de condições não-lineares. Use <strong>Joiner</strong> quando ambas as fontes são grandes, de naturezas distintas, ou quando você precisa de Full Outer Join. Para volumes de trilhões de registros sem chave restritiva forte (relação M×N), filtre massivamente antes do Joiner para manter controle de paginação.</p>
-      </div>
-    </section>
-
-    <!-- 08 - PARÂMETROS -->
-    <section id="parametros">
-      <div class="section-header">
-        <div class="section-num">08</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Gestão de Estado</div>
-          <h2 class="section-title">Parâmetros e <em>Variáveis</em> de Mapeamento</h2>
-        </div>
-      </div>
-
-      <div class="compare-grid">
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(45,212,191,0.08);color:var(--teal)">
-            <span>📌</span> Mapping Parameter ($$PARAM)
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">🔒</span><span>Valor fixado <strong>antes do início</strong> da sessão — imutável durante execução</span></div>
-            <div class="compare-item"><span class="ci-icon">📄</span><span>Alimentado pelo <strong>Parameter File</strong> no servidor</span></div>
-            <div class="compare-item"><span class="ci-icon">🎯</span><span>Ideal para: caminhos estáticos, senhas, schemas (ex: $$DB_SCHEMA_NAME)</span></div>
-            <div class="compare-item"><span class="ci-icon">♻️</span><span>Centralizado em arquivo texto fora do escopo de compilação — fácil manutenção</span></div>
-          </div>
-        </div>
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(245,200,66,0.08);color:var(--gold)">
-            <span>🔄</span> Mapping Variable ($$VAR)
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">💾</span><span>Receptáculo <strong>vivo e efêmero</strong> — pode ser modificado durante o processamento</span></div>
-            <div class="compare-item"><span class="ci-icon">📈</span><span>Funções: <strong>Max, Min, Sum, Count</strong> para captura acumulativa durante a sessão</span></div>
-            <div class="compare-item"><span class="ci-icon">🗄️</span><span>Ao encerrar com sucesso, o valor é <strong>persistido no Repository Service</strong></span></div>
-            <div class="compare-item"><span class="ci-icon">🔁</span><span>Na próxima execução, carrega o último valor salvo — base para <strong>Agregação Incremental</strong></span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="callout info">
-        <div class="callout-title">⚡ Agregação Incremental</div>
-        A técnica mais poderosa de otimização: configure o Aggregator para <strong>não descartar o cachê</strong> entre execuções, use uma variável <code style="background:var(--bg3);padding:1px 6px;border-radius:3px;font-size:12px">$$INCREMENT_DATE</code> com função Max, e filtre na Source Qualifier apenas registros novos: <code style="background:var(--bg3);padding:2px 8px;border-radius:3px;font-size:12px">WHERE LOAD_DATE > $$INCREMENT_DATE</code>. Reduz drasticamente o tempo de processamento em bases históricas de milhões de linhas.
-      </div>
-    </section>
-
-    <!-- 09 - MAPPLETS -->
-    <section id="mapplets">
-      <div class="section-header">
-        <div class="section-num">09</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Encapsulamento</div>
-          <h2 class="section-title">Mapplets e <em>Reusabilidade</em></h2>
-        </div>
-      </div>
-
-      <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
-        <div class="card">
-          <div class="card-icon" style="background:rgba(99,130,255,0.12)">🔷</div>
-          <h3>Reusable Transformation</h3>
-          <p>Para lógicas unidimensionais — uma única transformação reutilizável (ex: limpeza de e-mail). Instanciável em dezenas de pipelines. Um único ajuste propaga alterações em todos os mapeamentos associados automaticamente.</p>
-          <span class="card-badge" style="background:rgba(99,130,255,0.12);color:var(--accent)">Escopo Linear</span>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(245,200,66,0.1)">🔶</div>
-          <h3>Mapplet</h3>
-          <p>Mini-mapping encapsulado para lógicas complexas combinando Filter + Aggregator + múltiplos caminhos. Opera como macro-processador com <strong>restrições arquiteturais</strong> específicas que devem ser respeitadas.</p>
-          <span class="card-badge" style="background:rgba(245,200,66,0.1);color:var(--gold)">Macro Lógica</span>
-        </div>
-      </div>
-
-      <div class="callout danger">
-        <div class="callout-title">🚫 Restrições de Mapplet</div>
-        Um Mapplet <strong>proíbe:</strong> (1) instanciamento de Targets (destinos) internos; (2) Sequence Generators e Normalizers na modelagem; (3) Stored Procedures devem ser configuradas em modo <em>Normal</em>. Alterações na macroestrutura requerem ressincronização das portas externas nos mappings clientes.
-      </div>
-    </section>
-
-    <!-- 10 - CBLO -->
-    <section id="cblo">
-      <div class="section-header">
-        <div class="section-num">10</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Integridade Referencial</div>
-          <h2 class="section-title">CBLO e <em>Target Load Plan</em></h2>
-        </div>
-      </div>
-
-      <p>A remessa de dados para alvos físicos deve obedecer os regimentos de integridade relacional entre Chaves Primárias (Parent) e Estrangeiras (Child). Violações geram colisões e encerramento do carregamento com perda de dados.</p>
-
-      <div class="compare-grid">
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(74,222,128,0.08);color:var(--green)">
-            <span>🔗</span> Constraint Based Load Ordering (CBLO)
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">📋</span><span>Ativado na aba Advanced das sessões — instrui o Integration Service a respeitar relações parent/child</span></div>
-            <div class="compare-item"><span class="ci-icon">📌</span><span>Opera <strong>microscopicamente linha a linha</strong> — commita o pai antes de inserir os filhos</span></div>
-            <div class="compare-item"><span class="ci-icon">🔄</span><span>Funciona apenas com <strong>Active Source único e coeso</strong></span></div>
-            <div class="compare-item"><span class="ci-icon">🚫</span><span>Cancelado em: múltiplas Active Sources distintas, relacionamentos circulares</span></div>
-          </div>
-        </div>
-        <div class="compare-card">
-          <div class="compare-header" style="background:rgba(167,139,250,0.1);color:var(--accent2)">
-            <span>📅</span> Target Load Plan
-          </div>
-          <div class="compare-body">
-            <div class="compare-item"><span class="ci-icon">🏗️</span><span>Rege <strong>paralelismos globais</strong> — orquestra pipelines completos (não linha a linha)</span></div>
-            <div class="compare-item"><span class="ci-icon">🕐</span><span>Define cronologicamente <strong>qual pipeline dispara primeiro</strong> perante execuções simultâneas</span></div>
-            <div class="compare-item"><span class="ci-icon">⚡</span><span>Complementa o CBLO para cenários de múltiplas fontes ativas</span></div>
-            <div class="compare-item"><span class="ci-icon">🎯</span><span>Garante que os dados-pai cheguem antes dos dados-filho em cargas paralelas</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 11 - SCD -->
-    <section id="scd">
-      <div class="section-header">
-        <div class="section-num">11</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Modelagem Dimensional</div>
-          <h2 class="section-title">Slowly Changing <em>Dimensions</em></h2>
-        </div>
-      </div>
-
-      <p>As Dimensões de Alteração Lenta estruturam como modificações processadas na origem são controladas em esquemas analíticos. Dominar SCD é essencial para entrevistas técnicas em Data Warehouse.</p>
-
-      <div class="scd-grid">
-        <div class="scd-card" style="border-color:rgba(248,113,113,0.25)">
-          <div class="scd-num" style="color:rgba(248,113,113,0.3)">1</div>
-          <h3>Substituição Imediata</h3>
-          <p>Sem histórico. A política não exige retroatividade — dados obsoletos são destruídos e substituídos pelo novo valor.</p>
-          <ul class="scd-steps">
-            <li>Lookup busca chave no destino</li>
-            <li>Router: grupo new_rec ou change_rec</li>
-            <li>Novo: Sequence Generator + INSERT</li>
-            <li>Mudança: Update Strategy DD_UPDATE</li>
-          </ul>
-        </div>
-        <div class="scd-card" style="border-color:rgba(74,222,128,0.25)">
-          <div class="scd-num" style="color:rgba(74,222,128,0.3)">2</div>
-          <h3>Histórico Completo (Flag)</h3>
-          <p>Máxima retenção histórica. Preserva toda a linhagem cronológica com flags de status Ativo/Inativo.</p>
-          <ul class="scd-steps">
-            <li>Lookup + Router detecta mudança</li>
-            <li>Update Strategy DD_UPDATE no registro antigo (INACTIVE)</li>
-            <li>Sequence Generator + DD_INSERT para nova versão (ACTIVE)</li>
-            <li>INACTIVE_DATE = sysdate no registro anterior</li>
-          </ul>
-        </div>
-        <div class="scd-card" style="border-color:rgba(245,200,66,0.25)">
-          <div class="scd-num" style="color:rgba(245,200,66,0.3)">3</div>
-          <h3>Camada Horizontal</h3>
-          <p>Guarda apenas a versão anterior em colunas adjacentes. Não cria novas linhas — move o atributo antigo para coluna "previo".</p>
-          <ul class="scd-steps">
-            <li>Evita adensamento do banco (sem novas linhas)</li>
-            <li>Coluna PREV_STATUS ← valor atual</li>
-            <li>Coluna CURR_STATUS ← novo valor</li>
-            <li>Ideal quando apenas 1 versão histórica basta</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="callout warning">
-        <div class="callout-title">📚 SCD Tipo 2 — Detalhe Crítico</div>
-        No SCD Tipo 2, o fluxo se divide em <strong>duas frentes assíncronas simultâneas</strong>: uma atualiza o registro antigo para INACTIVE com DD_UPDATE, outra insere a nova versão como ACTIVE com DD_INSERT. A coordenação via Target Load Plan garante que o UPDATE aconteça antes do INSERT para evitar violações de chave única.
-      </div>
-    </section>
-
-    <!-- 12 - PERFORMANCE -->
-    <section id="performance">
-      <div class="section-header">
-        <div class="section-num">12</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Diagnóstico</div>
-          <h2 class="section-title">Performance Tuning e <em>Gargalos</em></h2>
-        </div>
-      </div>
-
-      <p>A otimização exige análise dos logs operacionais, isolando os colapsos via <strong>Busy Percentage Metrics</strong> — comparando tempos de Reader Threads, Transformation Threads e Writer Threads.</p>
-
-      <div class="perf-grid">
-        <div class="perf-card" style="border-top:2px solid var(--red)">
-          <h4 style="color:var(--red)">🎯 Target Bottleneck</h4>
-          <ul>
-            <li>Reader rápida + Writer lenta (alto Busy %)</li>
-            <li>Drop de índices antes da carga</li>
-            <li>Rebuild de índices via Post-Session script</li>
-            <li>Uso de Staging Areas para cargas volumosas</li>
-            <li>Delete/Merge isolado do pipeline principal</li>
-          </ul>
-        </div>
-        <div class="perf-card" style="border-top:2px solid var(--orange)">
-          <h4 style="color:var(--orange)">📥 Source Bottleneck</h4>
-          <ul>
-            <li>Reader Thread com alto Busy % bloqueando o pipeline</li>
-            <li>Mover lógica de filtro para Source Qualifier (WHERE nativo)</li>
-            <li>Evitar funções iterativas no SQL de origem</li>
-            <li>Eliminar Full Table Scans com índices adequados</li>
-            <li>Particionar fonte para leituras paralelas</li>
-          </ul>
-        </div>
-        <div class="perf-card" style="border-top:2px solid var(--gold)">
-          <h4 style="color:var(--gold)">⚙️ Transformation Bottleneck</h4>
-          <ul>
-            <li>Aggregator escrevendo cache para disco (grupo muito grande)</li>
-            <li>Joiner carregando tabela Master superdimensionada</li>
-            <li>Colocar tabela menor como Master no Joiner</li>
-            <li>Aplicar filtros antes de transformações pesadas</li>
-            <li>Pushdown Optimization para mover lógica ao banco</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="callout info">
-        <div class="callout-title">🔑 Técnicas Avançadas de Deduplicação</div>
-        5 abordagens para remover duplicatas: (1) <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">SELECT DISTINCT</code> no Source Qualifier; (2) Aggregator com Group By em todas as colunas; (3) <strong>Sorter com opção Distinct</strong>; (4) Expression com contador + Filter; (5) Lookup Dinâmico com NewLookupRow=0 descartado via Router.
-      </div>
-    </section>
-
-    <!-- 13 - PDO -->
-    <section id="pdo">
-      <div class="section-header">
-        <div class="section-num">13</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Otimização Máxima</div>
-          <h2 class="section-title">Pushdown <em>Optimization</em></h2>
-        </div>
-      </div>
-
-      <p>Para ambientes com Data Warehouses massivos, o <strong>Pushdown Optimization (PDO)</strong> delega integralmente o processamento matemático ao banco de dados, evitando o tráfego de bytes pelo Integration Service.</p>
-
-      <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="card">
-          <div class="card-icon" style="background:rgba(99,130,255,0.12)">🏭</div>
-          <h3>Como funciona</h3>
-          <p>O PowerCenter converte as transformações gráficas em SQL nativo otimizado para o banco específico, eliminando o trânsito pelo Integration Service.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(245,200,66,0.1)">⚡</div>
-          <h3>Full vs Partial</h3>
-          <p>Pushdown pode ser <strong>parcial</strong> (apenas origem ou destino) ou <strong>total</strong> — aproveitando ao máximo o supercomputador do banco.</p>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(248,113,113,0.1)">⚠️</div>
-          <h3>Limitações</h3>
-          <p>Full Pushdown transfere controle transacional ao banco — sem recuperação pontual linha a linha. Comandos sem equivalente SQL nativo forçam rebaixamento ao modo padrão.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 14 - NUVEM -->
-    <section id="nuvem">
-      <div class="section-header">
-        <div class="section-num">14</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Evolução</div>
-          <h2 class="section-title">IICS e a <em>Nuvem</em></h2>
-        </div>
-      </div>
-
-      <p>O <strong>Informatica Intelligent Cloud Services (IICS)</strong> representa a evolução natural do PowerCenter para arquiteturas cloud-native, introduzindo novos paradigmas de orquestração.</p>
-
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-icon" style="background:rgba(45,212,191,0.12)">🗺️</div>
-          <h3>Mapping Tasks</h3>
-          <p>Equivalente às sessions do PowerCenter. Encapsulam a lógica de transformação e são orchestrados de forma modular dentro dos Taskflows.</p>
-          <span class="card-badge" style="background:rgba(45,212,191,0.12);color:var(--teal)">IICS</span>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(167,139,250,0.12)">🔀</div>
-          <h3>Taskflows</h3>
-          <p>Orchestração avançada com controle de dependências sequenciais, paralelismo, verificações de volume ativo e eliminação de execuções fantasma.</p>
-          <span class="card-badge" style="background:rgba(167,139,250,0.12);color:var(--accent2)">Orquestração</span>
-        </div>
-        <div class="card">
-          <div class="card-icon" style="background:rgba(245,200,66,0.1)">⏰</div>
-          <h3>Agendamento Avançado</h3>
-          <p>Suporta execuções segmentadas em recortes temporais específicos (ex: cron semanal), direcionando fluxos isolados no pipeline de análise cruzada.</p>
-          <span class="card-badge" style="background:rgba(245,200,66,0.1);color:var(--gold)">Scheduling</span>
-        </div>
-      </div>
-
-      <div class="highlight-box">
-        <h4>🌐 Paradigma Cloud-Native</h4>
-        <p>No IICS, a complexidade operacional do PowerCenter (domínios, nós, pmserver) é abstraída pela infraestrutura Informatica. O foco do engenheiro muda para o design de <strong>fluxos resilientes</strong> com tratamento elegante de dependências, retentativas e verificações de idempotência — temas cruciais em pipelines de dados distribuídos modernos.</p>
-        <p>A essência permanece a mesma: dominar a lógica de transformação, gestão de estado, modelagem dimensional e performance — habilidades que transcendem a ferramenta específica e definem o engenheiro de dados de alto nível.</p>
-      </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- RESUMO FINAL -->
-    <section>
-      <div class="section-header">
-        <div class="section-num" style="font-size:30px;min-width:52px">★</div>
-        <div class="section-title-block">
-          <div class="section-eyebrow">Síntese</div>
-          <h2 class="section-title">Pontos-Chave para <em>Entrevistas</em></h2>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Tema</th>
-              <th>Ponto Crítico</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Transformações</td>
-              <td>Ativa altera cardinalidade; Passiva mantém 1:1. Dois fluxos ativos não se fundem diretamente.</td>
-            </tr>
-            <tr>
-              <td>Lookup Conectado</td>
-              <td>Múltiplos retornos, suporta cachê dinâmico, usa valor padrão em no-match.</td>
-            </tr>
-            <tr>
-              <td>Lookup Desconectado</td>
-              <td>1 retorno (Return Port), somente cachê estático, retorna NULL em no-match, alta reutilização.</td>
-            </tr>
-            <tr>
-              <td>NewLookupRow</td>
-              <td>0=Descartar, 1=Insert, 2=Update. Coordenação obrigatória via Router + Update Strategy.</td>
-            </tr>
-            <tr>
-              <td>Joiner vs Lookup</td>
-              <td>Joiner para fontes heterogêneas/Full Outer; Lookup para tabelas pequenas com condições não-lineares.</td>
-            </tr>
-            <tr>
-              <td>$$Var vs $$Param</td>
-              <td>Param = valor fixo antes da sessão; Var = muda durante execução e persiste no repositório ao final.</td>
-            </tr>
-            <tr>
-              <td>SCD Tipo 2</td>
-              <td>Dois fluxos assíncronos: DD_UPDATE no registro antigo + DD_INSERT na nova versão ativa.</td>
-            </tr>
-            <tr>
-              <td>CBLO</td>
-              <td>Garante integridade pai-filho linha a linha. Cancelado com múltiplas Active Sources ou relacionamentos circulares.</td>
-            </tr>
-            <tr>
-              <td>Performance</td>
-              <td>Identifique o gargalo por Busy %: Target → drop índices; Source → filtro no SQL; Transform → early filtering.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-  </div><!-- /content -->
-</main>
-
-<script>
-  // Barra de progresso de leitura
-  const bar = document.getElementById('progressBar');
-  window.addEventListener('scroll', () => {
-    const scrollTop = window.scrollY;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-    bar.style.width = progress + '%';
-  });
-
-  // Nav ativo
-  const sections = document.querySelectorAll('section[id]');
-  const navItems = document.querySelectorAll('.nav-item');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.getAttribute('id');
-        navItems.forEach(item => {
-          item.classList.toggle('active', item.getAttribute('href') === '#' + id);
-        });
+    const ores = [
+      {
+        id: "coal",
+        name: "Carvão",
+        dimension: "Overworld",
+        color: "var(--coal)",
+        tool: "Madeira+",
+        bestY: "Y 136+",
+        safeY: "Y 96-160",
+        range: "Y 0 a 320",
+        biome: "Montanhas ajudam",
+        quick: "Suba. Carvão profundo rende mal e perde para pedra exposta em altura.",
+        tags: ["montanhas", "picos", "tochas", "early game"],
+        profiles: [
+          ["Mais rápido", "Encostas altas e montanhas acima de Y 136."],
+          ["Mais seguro", "Caverna rasa/encosta durante o dia, sem entrar fundo."],
+          ["Quando ignorar", "Se você já tem carvão suficiente, use madeira/carvão vegetal e não desça só por isso."]
+        ],
+        routes: [
+          ["Montanhas/picos", "Procure Stony Peaks, Jagged Peaks, Frozen Peaks, Snowy Slopes, Grove, Meadow ou Windswept Hills no Biome Finder.", `${biomeBase}&x=0&z=650&zoom=0.5`],
+          ["Região sul da seed", "A área nevada ao sul do spawn é um bom lugar para começar a checar biomas altos, mas confirme no hover do mapa.", `${biomeBase}&x=0&z=650&zoom=0.5`],
+          ["Sem biome", "Qualquer encosta alta com pedra exposta já funciona melhor que mineração funda.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Encosta de montanha", "Y 136+", "baixo", "baixo", "Melhor método geral para carvão em massa.", [
+            "Abra o Biome Finder e procure picos/montanhas ou qualquer encosta alta.",
+            "Suba acima de Y 136 e raspe carvão visível em pedra exposta.",
+            "Faça pequenos cortes horizontais na encosta em vez de um túnel profundo.",
+            "Transforme parte em tochas no local para não ocupar inventário."
+          ], ["Quase não exige setup", "Muito carvão por minuto se a montanha for boa", "Pouca chance de lava"], ["Depende de achar relevo alto", "Pode render menos em florestas/terra sem pedra exposta"], "mountain"),
+          method("Caving raso oportunista", "Y 64-120", "médio", "baixo", "Bom no começo, enquanto você procura ferro e comida.", [
+            "Entre só em cavernas rasas e largas.",
+            "Pegue carvão exposto nas paredes e volte antes de se perder.",
+            "Não force caverna profunda só por carvão; o rendimento cai."
+          ], ["Rápido no início", "Combina com ferro raso", "Sem precisar cavar muito"], ["Risco de mobs", "Menos previsível que montanha"], "cave"),
+          method("Carvão vegetal como substituto", "Superfície", "baixo", "baixo", "Melhor alternativa quando não há montanha perto.", [
+            "Corte árvores perto da base.",
+            "Queime toras para fazer carvão vegetal.",
+            "Use como combustível/tocha até achar montanhas."
+          ], ["Independente de seed", "Seguro", "Resolve emergência"], ["Não dá XP de mineração", "Consome madeira"], "surface")
+        ]
+      },
+      {
+        id: "iron",
+        name: "Ferro",
+        dimension: "Overworld",
+        color: "var(--iron)",
+        tool: "Pedra+",
+        bestY: "Y 16 / Y 232",
+        safeY: "Y 16",
+        range: "Y -64 a 320",
+        biome: "Montanhas ajudam",
+        quick: "Y 16 para começo; montanhas altas para volume; veios gigantes em tuff no fundo.",
+        tags: ["ferro", "montanhas", "veio gigante", "tuff"],
+        profiles: [
+          ["Começo de jogo", "Túnel/caverna em Y 16. é estável e não exige equipamento forte."],
+          ["Muito ferro", "Montanha alta perto de Y 200-232 ou veio gigante com tuff."],
+          ["Exploração", "Cavernas grandes podem render bem, mas só se estiverem seguras e iluminadas."]
+        ],
+        routes: [
+          ["Montanhas/picos", "Para ferro alto, destaque biomas de montanha e procure pedra exposta acima de Y 200.", `${biomeBase}&x=0&z=650&zoom=0.5`],
+          ["Veios de tuff", "Não dá para prever fácil no mapa; se achar tuff com ferro em deepslate, siga o veio.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Rota universal", "Se estiver perto da base, cavar em Y 16 funciona em qualquer biome.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Branch mining estável", "Y 16", "baixo", "baixo", "Melhor para ferro cedo e previsível.", [
+            "Desça por escada até Y 16.",
+            "Faça corredor 1x2 e galhos laterais a cada 3 blocos.",
+            "Pegue ferro, carvão ocasional e pedra útil sem entrar em deepslate pesado.",
+            "Volte quando encher inventário, não quando quebrar todas as picaretas."
+          ], ["Consistente", "Pouco risco de lava", "Funciona em qualquer biome"], ["Não é o maior rendimento possível", "Pode ficar repetitivo"], "branch"),
+          method("Montanha alta", "Y 200-232", "baixo", "baixo", "Melhor quando você achou pico com muita pedra exposta.", [
+            "Procure picos/montanhas no mapa.",
+            "Suba acima de Y 200 e raspe paredes de pedra.",
+            "Cave cortes horizontais curtos e volte à superfície para se orientar."
+          ], ["Pode superar mina subterrânea", "Também rende carvão e esmeralda", "Menos deepslate"], ["Depende do relevo", "Risco de queda/neve fofa"], "mountain"),
+          method("Veio gigante com tuff", "Y -60 a -8", "médio", "baixo", "Ótimo quando encontrado por acaso em cavernas profundas.", [
+            "Se achar tuff misturado com ferro bruto/blocos de ferro bruto, não abandone.",
+            "Siga o tuff em todas as direções com cuidado.",
+            "Use Fortune se tiver; marque caminho para voltar."
+          ], ["Rendimento enorme", "Pode dar stacks de ferro", "Vale muito no mid-game"], ["Difícil de localizar", "Mais mobs/lava no fundo"], "orevein")
+        ]
+      },
+      {
+        id: "copper",
+        name: "Cobre",
+        dimension: "Overworld",
+        color: "var(--copper)",
+        tool: "Pedra+",
+        bestY: "Y 48",
+        safeY: "Y 40-60",
+        range: "Y -16 a 112",
+        biome: "Dripstone Caves",
+        quick: "Dripstone Caves + Y 48 é o melhor pacote. Fortune faz diferença enorme.",
+        tags: ["cobre", "dripstone caves", "granite", "veio gigante"],
+        profiles: [
+          ["Mais rápido", "Dripstone Caves em torno de Y 40-60."],
+          ["Consistente", "Túnel em Y 48 se você ainda não achou dripstone."],
+          ["Volume grande", "Siga veios gigantes de cobre em granite entre Y 0 e 50."]
+        ],
+        routes: [
+          ["Dripstone Caves", "No Chunkbase, mude Biome Height para Underground e destaque Dripstone Caves.", `${biomeBase}&x=-48&z=64&zoom=0.5&biomeHeight=caveDepth`],
+          ["Túnel universal", "Sem dripstone, use Y 48 perto da base.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Veios de granite", "Se achar muito granite com cobre, siga o veio; isso não depende de estrutura visível no mapa.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Dripstone Caves", "Y 40-60", "médio", "baixo", "Melhor método geral para cobre.", [
+            "Abra o Biome Finder e selecione Biome Height: Underground.",
+            "Destaque Dripstone Caves.",
+            "Entre pela caverna mais segura ou cave até Y 48.",
+            "Pegue veios expostos e volte antes de se perder."
+          ], ["Muito mais cobre", "Poupa picareta", "Combina com exploração"], ["Mobs e quedas", "Caverna pode ser confusa"], "cave"),
+          method("Branch mining em Y 48", "Y 48", "baixo", "baixo", "Plano B confiável quando não achou dripstone.", [
+            "Cave até Y 48.",
+            "Faça corredor 1x2 com galhos laterais.",
+            "Use Fortune se tiver, pois cobre bruto multiplica bem."
+          ], ["Funciona em qualquer lugar", "Seguro", "Rota simples"], ["Menos rendimento que dripstone", "Pode ficar lento sem Fortune"], "branch"),
+          method("Veio gigante de granite", "Y 0-50", "médio", "baixo", "Use quando encontrar granite com cobre em quantidade anormal.", [
+            "Ao achar granite com cobre, cave ao redor do granite.",
+            "Siga a direção do veio em vez de voltar ao túnel principal.",
+            "Leve baús ou shulker se for coletar muito."
+          ], ["Pode render absurdo", "Ótimo para builds", "Aproveita achado raro"], ["Não é previsível", "Pode ocupar inventário rápido"], "orevein")
+        ]
+      },
+      {
+        id: "gold",
+        name: "Ouro",
+        dimension: "Overworld",
+        color: "var(--gold)",
+        tool: "Ferro+",
+        bestY: "Y -16 / Badlands 32+",
+        safeY: "Y -16",
+        range: "Y -64 a 32",
+        biome: "Badlands é bônus",
+        quick: "Em biome comum, Y -16. Em Badlands, suba: ouro aparece acima de Y 32.",
+        tags: ["ouro", "badlands", "piglin", "maçã dourada"],
+        profiles: [
+          ["Mais rápido com biome", "Badlands acima de Y 32."],
+          ["Consistente", "Branch mining em Y -16."],
+          ["Se já está fundo", "Aproveite ouro enquanto minera diamante/redstone, mas não é o pico normal."]
+        ],
+        routes: [
+          ["Badlands", "Destaque Badlands, Wooded Badlands ou Eroded Badlands no Biome Finder.", `${biomeBase}&x=-48&z=64&zoom=0.25`],
+          ["Sem Badlands", "Use Y -16 em qualquer região.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Alternativa Nether", "Para troca com piglins, ouro do Nether pode ser mais rápido, mas rende pepitas.", `${netherBase}&x=-6&z=8&zoom=0.75`]
+        ],
+        methods: [
+          method("Badlands alto", "Y 32-120", "baixo", "baixo", "Melhor se você achou o biome certo.", [
+            "Encontre Badlands no Chunkbase.",
+            "Cave em encostas, ravinas e paredes acima de Y 32.",
+            "Priorize minério exposto e túneis curtos, não uma mina profunda."
+          ], ["Rendimento alto", "Menos deepslate", "Bom para grandes quantidades"], ["Depende de biome", "Pode ficar longe da base"], "mountain"),
+          method("Branch mining normal", "Y -16", "médio", "baixo", "Melhor sem Badlands.", [
+            "Desça até Y -16.",
+            "Faça corredor 1x2 e galhos.",
+            "Leve picareta de ferro ou melhor."
+          ], ["Consistente", "Funciona em qualquer biome", "Pode combinar com redstone/lapis próximos"], ["Deepslate pode atrasar", "Mais lava que camadas altas"], "branch"),
+          method("Aproveitamento no Nether", "Y 15-114", "médio", "baixo", "Bom se o objetivo é piglin/barter, não blocos de ouro em massa.", [
+            "Equipe uma peça de ouro.",
+            "Bloqueie visão de piglins antes de quebrar ouro.",
+            "Use Fortune para pepitas ou Silk Touch para fundir depois."
+          ], ["Fácil de achar", "Combina com rota de netherite", "Bom para barter"], ["Piglins ficam agressivos", "Rende pepitas se não usar Silk Touch"], "nether")
+        ]
+      },
+      {
+        id: "redstone",
+        name: "Redstone",
+        dimension: "Overworld",
+        color: "var(--redstone)",
+        tool: "Ferro+",
+        bestY: "Y -58",
+        safeY: "Y -53/-54",
+        range: "Y -64 a 16",
+        biome: "Qualquer",
+        quick: "Mine junto com diamante. Quanto mais baixo, melhor, mas Y -53/-54 reduz estresse de lava.",
+        tags: ["redstone", "diamante", "profundo", "deepslate"],
+        profiles: [
+          ["Mais rendimento", "Y -58 com branch/poke-holes."],
+          ["Menos lava", "Y -53/-54, perdendo um pouco de pico bruto."],
+          ["Rápido se achou caverna", "Caving profundo abaixo de Y -32."]
+        ],
+        routes: [
+          ["Qualquer biome", "Redstone não precisa de biome específico.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Combinar com diamante", "Use a mesma mina profunda de diamante.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Caverna profunda", "Se achar entrada abaixo de Y -30, pode render rápido.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Branch junto com diamante", "Y -58", "médio", "baixo", "Melhor método geral.", [
+            "Desça até Y -58.",
+            "Faça corredor 1x2 e galhos espaçados.",
+            "Leve água, blocos e comida.",
+            "Pegue redstone e diamante no mesmo trajeto."
+          ], ["Rende dois minérios importantes", "Consistente", "Bom para longo prazo"], ["Deepslate lento", "Lava frequente"], "branch"),
+          method("Camada segura", "Y -53/-54", "baixo", "baixo", "Melhor para quem quer menos interrupção.", [
+            "Cave na faixa Y -53 a -54.",
+            "Mantenha a mesma malha de branch mining.",
+            "Use quando morrer para lava seria pior que perder um pouco de rendimento."
+          ], ["Menos lava", "Mais confortável", "Bom para sessão longa"], ["Pico bruto menor", "Ainda é deepslate"], "safeBranch"),
+          method("Caverna profunda", "Y -32 para baixo", "alto", "baixo", "Rápido se você já encontrou uma caverna boa.", [
+            "Ilumine ou bloqueie rotas antes de minerar.",
+            "Pegue redstone exposta nas paredes.",
+            "Saia quando o risco ficar maior que o lucro."
+          ], ["Pode ser muito rápido", "Também acha diamante/lapis/ouro", "Menos blocos quebrados"], ["Mobs", "Lava", "Rendimento varia com a seed"], "cave")
+        ]
+      },
+      {
+        id: "lapis",
+        name: "Lápis-lazúli",
+        dimension: "Overworld",
+        color: "var(--lapis)",
+        tool: "Pedra+",
+        bestY: "Y 0",
+        safeY: "Y -4 a 8",
+        range: "Y -64 a 64",
+        biome: "Qualquer",
+        quick: "Y 0 é o alvo. Caving ajuda, mas lapis tem faixas onde não gosta de exposição ao ar.",
+        tags: ["lapis", "encantamento", "Y 0"],
+        profiles: [
+          ["Encantamento cedo", "Caverna/túnel em Y 0."],
+          ["Consistente", "Branch curto em Y 0 até achar alguns veios."],
+          ["Não exagere", "Com Fortune, poucos veios já resolvem bastante encantamento."]
+        ],
+        routes: [
+          ["Qualquer biome", "Lápis não exige biome específico.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Perto da base", "Escolha um ponto seguro para descer e criar uma pequena mina em Y 0.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Combinar com ferro", "Y 0 fica abaixo do pico de ferro, mas ainda pode render recursos mistos.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Branch curto em Y 0", "Y 0", "baixo", "baixo", "Melhor método controlado.", [
+            "Desça até Y 0.",
+            "Faça um corredor principal curto.",
+            "Abra galhos até achar 1-3 veios.",
+            "Use Fortune se tiver e pare quando tiver o suficiente."
+          ], ["Consistente", "Seguro", "Resolve encantamento rápido"], ["Não é bom para diamante", "Pode render pouco sem Fortune"], "branch"),
+          method("Caverna média", "Y -16 a 32", "médio", "baixo", "Bom se a caverna já está aberta.", [
+            "Explore cavernas perto de Y 0.",
+            "Pegue lapis exposto, mas não dependa só disso.",
+            "Marque a saída antes de entrar em ramificações."
+          ], ["Poupa picareta", "Pode achar ferro/ouro", "Bom early-game"], ["Mobs", "Lapis nem sempre aparece exposto"], "cave"),
+          method("Mineração de necessidade", "Y 0", "baixo", "baixo", "Use quando só precisa de lapis para uma mesa de encantamento.", [
+            "Leve 2-3 picaretas de pedra/ferro.",
+            "Cave por 10 minutos em Y 0.",
+            "Volte e encante; não transforme isso em mega-mina."
+          ], ["Objetivo claro", "Pouco tempo", "Baixo risco"], ["Não otimiza outros minérios"], "simple")
+        ]
+      },
+      {
+        id: "diamond",
+        name: "Diamante",
+        dimension: "Overworld",
+        color: "var(--diamond)",
+        tool: "Ferro+",
+        bestY: "Y -58/-59",
+        safeY: "Y -53/-54",
+        range: "Y -64 a 16",
+        biome: "Qualquer",
+        quick: "Para constância: branch/poke-holes em Y -58. Para menos lava: Y -53/-54. Caving vence se a caverna profunda for excelente.",
+        tags: ["diamante", "poke holes", "crawl mining", "caverna profunda", "aquifer"],
+        profiles: [
+          ["Mais consistente", "Branch/poke-holes/crawl em Y -57/-58."],
+          ["Menos estresse", "Branch em Y -53/-54 para reduzir lava e bedrock."],
+          ["Curto prazo", "Caving profundo se você já encontrou uma caverna abaixo de Y -30."]
+        ],
+        routes: [
+          ["Qualquer biome", "Diamante não depende de biome.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Aquifers/oceanos", "Paredes submersas podem ser oportunidade tática, não plano universal.", `${biomeBase}&x=-48&z=64&zoom=0.5`],
+          ["Mina segura", "Escolha uma base, faça escada e túnel marcado até Y -58.", `${biomeBase}&x=-48&z=64&zoom=0.5`]
+        ],
+        methods: [
+          method("Branch mining otimizado", "Y -58/-59", "médio", "baixo", "Melhor método repetível para diamante manual.", [
+            "Desça até Y -58 ou Y -59.",
+            "Faça corredor 1x2.",
+            "Abra galhos laterais longos a cada 3 blocos.",
+            "Leve água, blocos, comida e uma rota marcada.",
+            "Use Fortune III quando possível."
+          ], ["Consistente", "Independente de caverna", "Também rende redstone"], ["Deepslate lento", "Lava frequente", "Pode cansar"], "branch"),
+          method("Poke-holes / crawl mining 1x1", "Y -57/-58", "médio", "baixo a médio", "Mais eficiente por bloco quebrado se você aceita setup.", [
+            "Faça um corredor principal.",
+            "Use crawl 1x1 se estiver confortável com a mecânica.",
+            "Abra buracos laterais de 1 bloco de largura em sequência.",
+            "Evite galhos colados demais para não sobrepor áreas já vistas."
+          ], ["Expõe muitas faces por bloco", "Bom rendimento manual", "Menos bloco quebrado"], ["Mais claustrofóbico", "Setup de crawl pode incomodar", "Atenção com lava"], "poke"),
+          method("Camada segura", "Y -53/-54", "baixo", "baixo", "Melhor para quem odeia lava e quer sessão longa.", [
+            "Use Y -53 ou Y -54.",
+            "Repita o padrão de branch mining.",
+            "Aceite rendimento menor em troca de menos interrupção."
+          ], ["Menos lava", "Mais confortável", "Ótimo para casual"], ["Menos diamante por hora que Y -58", "Ainda é fundo"], "safeBranch"),
+          method("Caving profundo", "Abaixo de Y -30", "alto", "baixo", "Vence no curto prazo quando a caverna é muito boa.", [
+            "Entre apenas com escudo, comida, blocos e água.",
+            "Ilumine ou bloqueie rotas antes de minerar.",
+            "Procure paredes profundas e pisos próximos de lava.",
+            "Saia quando o risco aumentar."
+          ], ["Pode render rápido", "Poupa picareta", "Acha minérios variados"], ["Muito variável", "Mobs/lava", "Diamante exposto ao ar é reduzido"], "cave"),
+          method("Paredes submersas / aquifer", "Y negativo", "médio", "baixo", "Oportunidade boa quando achar oceano/trincheira profunda.", [
+            "Procure paredes realmente submersas.",
+            "Use Respiração/Portas/Poções se tiver.",
+            "Escaneie paredes e ravinas inundadas.",
+            "Não dependa disso como método universal."
+          ], ["Pouco bloco quebrado", "Pode achar diamante visível", "água reduz risco de queda"], ["Inconsistente", "Pode ser lento sem encantamentos", "Aquifer interno varia"], "water"),
+          method("Beacon + Efficiency V", "Y -58 ou área alvo", "baixo", "alto", "End-game manual confortável.", [
+            "Monte beacon com Haste II.",
+            "Use Efficiency V e Unbreaking/Mending.",
+            "Abra áreas grandes ou branch rápido.",
+            "Lembre que deepslate não vira instamine universal."
+          ], ["Muito confortável", "Previsível", "Bom para longas sessões"], ["Setup caro", "Não é necessário early-game"], "beacon")
+        ]
+      },
+      {
+        id: "emerald",
+        name: "Esmeralda",
+        dimension: "Overworld",
+        color: "var(--emerald)",
+        tool: "Ferro+",
+        bestY: "Y 224+",
+        safeY: "Y 180+",
+        range: "Y -16 a 320",
+        biome: "Montanhas/picos",
+        quick: "Não faça branch genérico. Esmeralda é de montanha: quanto mais alto e mais pico, melhor.",
+        tags: ["esmeralda", "stony peaks", "jagged peaks", "frozen peaks", "villagers"],
+        profiles: [
+          ["Minerar de verdade", "Stony/Jagged/Frozen Peaks acima de Y 200."],
+          ["Mais prático", "Trocar com villagers quase sempre ganha em quantidade."],
+          ["Exploração", "Raspar pedra exposta em encostas altas."]
+        ],
+        routes: [
+          ["Stony Peaks", "Destaque Stony Peaks no Biome Finder; foi confirmado que o filtro existe na versão Bedrock 26.", `${biomeBase}&x=0&z=650&zoom=0.5`],
+          ["Outras montanhas", "Também procure Jagged Peaks, Frozen Peaks, Snowy Slopes, Grove, Meadow e Windswept Hills.", `${biomeBase}&x=0&z=650&zoom=0.5`],
+          ["Alternativa trading", "Se o objetivo é usar esmeralda como moeda, aldeões são o método mais eficiente.", `${biomeBase}&x=152&z=-344&zoom=1`]
+        ],
+        methods: [
+          method("Picos altos", "Y 224+", "médio", "baixo", "Melhor método de mineração para esmeralda bruta.", [
+            "Ache biome de montanha/pico.",
+            "Suba acima de Y 200.",
+            "Raspe pedra exposta e cave cortes horizontais curtos.",
+            "Use Fortune para multiplicar o pouco que aparecer."
+          ], ["É o método certo para o minério", "Pode render ferro/carvão junto", "Pouco deepslate"], ["Depende de biome e altura", "Raro por natureza"], "mountain"),
+          method("Encostas e cavernas de montanha", "Y 120-220", "médio", "baixo", "Plano B quando o pico não é alto o bastante.", [
+            "Explore cavernas que cortam montanhas.",
+            "Priorize paredes de pedra natural.",
+            "Não cave em planície esperando esmeralda."
+          ], ["Mais acessível", "Combina com exploração", "Pode achar ferro"], ["Menos rendimento que pico alto", "Pode ter mobs"], "cave"),
+          method("Trading como alternativa", "Vila", "baixo", "baixo", "Melhor para conseguir muitas esmeraldas, embora não seja mineração.", [
+            "Use aldeões: fazendeiro, bibliotecário, flecheiro etc.",
+            "Monte trocas repetíveis perto da base.",
+            "Use mineração só se você quer o minério/bloco raro."
+          ], ["Muito mais eficiente", "Seguro", "Escala bem"], ["Não é mineração", "Exige villagers"], "village")
+        ]
+      },
+      {
+        id: "quartz",
+        name: "Quartzo do Nether",
+        dimension: "Nether",
+        color: "var(--quartz)",
+        tool: "Madeira+",
+        bestY: "Exposto / Y 16",
+        safeY: "Perto do túnel",
+        range: "Y 10 a 117",
+        biome: "Nether qualquer",
+        quick: "Para XP e quartzo, pegue exposto nas paredes. Não se perca por minério fácil.",
+        tags: ["quartzo", "nether", "xp", "construção"],
+        profiles: [
+          ["XP rápido", "Quartzo exposto em paredes do Nether."],
+          ["Seguro", "Minerar só perto do túnel/portal marcado."],
+          ["Construção", "Fortune para itens; Silk Touch se quiser bloco de minério."]
+        ],
+        routes: [
+          ["Túnel atual do Nether", "Use seu corredor como eixo seguro e mine paredes laterais.", `${netherBase}&x=-6&z=8&zoom=0.75`],
+          ["Qualquer biome do Nether", "Quartzo não depende de biome específico.", `${netherBase}&x=-6&z=8&zoom=0.75`],
+          ["Perto da fortaleza", "Aproveite a viagem para pegar quartzo, mas não encha inventário antes do objetivo.", `${netherBase}&x=267&z=651&zoom=1`]
+        ],
+        methods: [
+          method("Catação exposta", "Qualquer Y", "médio", "baixo", "Melhor para XP rápido.", [
+            "Ande por paredes seguras perto do portal/túnel.",
+            "Quebre quartzo exposto.",
+            "Bloqueie lava imediatamente se abrir bolsão."
+          ], ["Muito XP", "Pouca escavação", "Fácil de achar"], ["Risco de lava", "Pode se perder"], "nether"),
+          method("Túnel controlado", "Y 16-80", "baixo", "baixo", "Mais seguro quando você está no Realm sem backup.", [
+            "Faça corredor 1x2 marcado.",
+            "Abra pequenas janelas laterais.",
+            "Nunca mine teto sem ter bloco pronto para lava."
+          ], ["Seguro", "Organizado", "Combina com rotas"], ["Menos XP por minuto"], "branch"),
+          method("Silk/Fortune por objetivo", "Qualquer Y", "baixo", "médio", "Escolha conforme o que você quer.", [
+            "Use Fortune se quer mais quartzo item e XP.",
+            "Use Silk Touch se quer decorar com minério ou fundir/armazenar diferente.",
+            "Não misture ferramentas sem reparar."
+          ], ["Otimiza drops", "Evita desperdício", "Bom para construção"], ["Exige encantamento"], "simple")
+        ]
+      },
+      {
+        id: "nether-gold",
+        name: "Ouro do Nether",
+        dimension: "Nether",
+        color: "var(--nethergold)",
+        tool: "Qualquer picareta",
+        bestY: "Y 15-16 / Y 114",
+        safeY: "Perto do túnel",
+        range: "Y 10 a 117",
+        biome: "Nether qualquer",
+        quick: "Bom para piglin/barter. Use ouro equipado e bloqueie visão dos piglins.",
+        tags: ["ouro", "nether", "piglin", "barter"],
+        profiles: [
+          ["Barter", "Fortune em ouro do Nether para pepitas."],
+          ["Ingot", "Silk Touch e fundir pode valer se você quer barra."],
+          ["Segurança", "Sempre minerar fora da visão de piglins."]
+        ],
+        routes: [
+          ["Perto do portal/túnel", "Ouro do Nether é comum; não precisa viajar muito.", `${netherBase}&x=-6&z=8&zoom=0.75`],
+          ["Rota de ancient debris", "Em Y 15, aproveite ouro enquanto minera netherite.", `${netherBase}&x=-6&z=8&zoom=0.75`],
+          ["Bastiões", "Se for buscar template/loot, cuidado dobrado com piglins.", `${netherBase}&x=-256&z=320&zoom=1`]
+        ],
+        methods: [
+          method("Fortune para pepitas", "Qualquer Y", "médio", "baixo", "Melhor para troca com piglins.", [
+            "Equipe uma peça de armadura de ouro.",
+            "Bloqueie a visão de piglins.",
+            "Quebre ouro com Fortune.",
+            "Converta pepitas em barras quando precisar."
+          ], ["Muito comum", "Bom para barter", "Combina com exploração"], ["Piglins aggro", "Rende pepitas"], "nether"),
+          method("Silk Touch + fundir", "Qualquer Y", "baixo", "médio", "Use se você quer barras e tem Silk Touch.", [
+            "Minere o bloco com Silk Touch.",
+            "Funda depois em forno.",
+            "Guarde separado do ouro normal para não confundir."
+          ], ["Pode render barra por minério", "Organizado", "Menos aleatório"], ["Exige Silk Touch", "Menos XP imediato"], "simple"),
+          method("Coleta em túnel de netherite", "Y 15", "médio", "baixo", "Aproveitamento enquanto procura ancient debris.", [
+            "Ao cavar Y 15, pegue ouro exposto nas paredes.",
+            "Não abra bolsões enormes só por ouro.",
+            "Priorize segurança contra lava."
+          ], ["Aproveita rota", "Sem viagem extra", "Bom custo"], ["Desvia do objetivo principal"], "branch")
+        ]
+      },
+      {
+        id: "ancient-debris",
+        name: "Detritos ancestrais",
+        dimension: "Nether",
+        color: "var(--debris)",
+        tool: "Diamante+",
+        bestY: "Y 15",
+        safeY: "Y 11-15",
+        range: "Y 6 a 119",
+        biome: "Nether qualquer",
+        quick: "TNT é mais rápido; camas são baratas; strip com Fire Resistance é o mais seguro.",
+        tags: ["netherite", "ancient debris", "TNT", "camas", "fire resistance"],
+        profiles: [
+          ["Mais rápido", "TNT manual em Y 15 se pólvora/areia não são problema."],
+          ["Mais barato", "Bed mining em Y 11-15."],
+          ["Mais seguro", "Strip/straight mining com Efficiency e Resistência ao Fogo."]
+        ],
+        routes: [
+          ["Nether perto do spawn", "Spawn Overworld X -48 / Z 64 equivale a Nether X -6 / Z 8.", `${netherBase}&x=-6&z=8&zoom=0.75`],
+          ["Fortaleza já marcada", "Se estiver indo para X 267 / Z 651, pode abrir pontos de mineração Y 15 no caminho.", `${netherBase}&x=267&z=651&zoom=1`],
+          ["Bastião/template", "Netherite também exige Netherite Upgrade Template, encontrado em bastiões.", `${netherBase}&x=-256&z=320&zoom=1`]
+        ],
+        methods: [
+          method("TNT manual", "Y 15", "médio", "alto", "Melhor throughput manual quando você tem explosivos.", [
+            "Cave túnel 1x2 em Y 15.",
+            "Coloque TNT espaçada no túnel.",
+            "Acenda de longe e recue.",
+            "Apague/bloqueie lava e colete debris exposto.",
+            "Não baseie tudo em chunk border; trate como detalhe secundário."
+          ], ["Mais rápido", "Revela muito netherrack", "Menos cliques de mineração"], ["Caro", "Exige cuidado com explosão/lava", "Precisa pólvora e areia"], "tnt"),
+          method("Bed mining", "Y 11-15", "alto", "baixo", "Melhor custo/velocidade sem TNT em massa.", [
+            "Faça túnel em Y 15 ou Y 11-12 se quiser variar.",
+            "Abra buraco à frente e coloque cama no fim.",
+            "Clique protegido atrás de um bloco.",
+            "Apague fogo/lava e cheque debris.",
+            "Leve comida e armadura; explosão machuca."
+          ], ["Barato", "Muito forte em survival solo", "Não exige creeper farm"], ["Arriscado", "Fogo e knockback", "Cansa rápido"], "bed"),
+          method("Strip/straight mining seguro", "Y 15", "baixo", "baixo", "Mais previsível e menos caótico.", [
+            "Use picareta de diamante/netherite com Efficiency se tiver.",
+            "Cave reto em Y 15.",
+            "Abra pequenos galhos ou janelas laterais.",
+            "Use Resistência ao Fogo para reduzir risco de lava."
+          ], ["Seguro", "Barato", "Bom em Realm sem setup"], ["Mais lento que TNT", "Gasta durabilidade"], "branch"),
+          method("Tunnel bore / quarry técnico", "Y 15", "médio", "muito alto", "Só para Java técnico ou servidor com regras próprias; não é plano prático para Bedrock vanilla.", [
+            "Exige infraestrutura grande.",
+            "Em Bedrock vanilla, TNT duping/tunnel bore não é equivalente ao Java.",
+            "No seu Realm Bedrock, prefira TNT real, camas ou strip seguro."
+          ], ["Rendimento enorme onde funciona", "Bom para end-game técnico"], ["Caro", "Pouco prático no Bedrock", "Pode violar regras de servidor"], "machine")
+        ]
       }
-    });
-  }, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' });
+    ];
 
-  sections.forEach(s => observer.observe(s));
-</script>
+    function method(name, y, risk, cost, when, steps, pros, cons, diagram) {
+      return { name, y, risk, cost, when, steps, pros, cons, diagram };
+    }
+
+    const oreSelect = document.querySelector("#oreSelect");
+    const search = document.querySelector("#search");
+    const layerGrid = document.querySelector("#layerGrid");
+    const detailShell = document.querySelector("#detailShell");
+    const layerPanel = document.querySelector("#layerPanel");
+    const emptyState = document.querySelector("#emptyState");
+
+    function setupSelect() {
+      ores.forEach(ore => {
+        const option = document.createElement("option");
+        option.value = ore.id;
+        option.textContent = ore.name;
+        oreSelect.appendChild(option);
+      });
+    }
+
+    function renderLayers() {
+      const query = search.value.trim().toLowerCase();
+      const visible = ores.filter(ore => {
+        const haystack = [ore.name, ore.dimension, ore.bestY, ore.safeY, ore.range, ore.biome, ore.quick, ...ore.tags].join(" ").toLowerCase();
+        return !query || haystack.includes(query);
+      });
+
+      layerGrid.innerHTML = visible.map(ore => `
+        <article class="layer-card" data-id="${ore.id}">
+          <div class="layer-head">
+            <div class="ore-dot" style="--ore: ${ore.color}"></div>
+            <h3>${ore.name}</h3>
+          </div>
+          <div class="layer-facts">
+            <div class="mini"><span>Melhor</span><b>${ore.bestY}</b></div>
+            <div class="mini"><span>Seguro</span><b>${ore.safeY}</b></div>
+            <div class="mini"><span>Faixa</span><b>${ore.range}</b></div>
+            <div class="mini"><span>Biome</span><b>${ore.biome}</b></div>
+          </div>
+          <p class="hint">${ore.quick}</p>
+          <div class="tag-row">${ore.tags.slice(0, 4).map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+        </article>
+      `).join("");
+      emptyState.classList.toggle("hidden", visible.length > 0);
+      document.querySelectorAll(".layer-card").forEach(card => {
+        card.addEventListener("click", () => {
+          oreSelect.value = card.dataset.id;
+          renderDetail();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+    }
+
+    function renderDetail() {
+      const ore = ores.find(item => item.id === oreSelect.value);
+      if (!ore) {
+        detailShell.classList.remove("active");
+        layerPanel.classList.remove("hidden");
+        return;
+      }
+      layerPanel.classList.add("hidden");
+      detailShell.classList.add("active");
+
+      document.querySelector("#selectedHero").innerHTML = `
+        <div class="selected-title">
+          <div class="ore-dot" style="--ore: ${ore.color}"></div>
+          <div>
+            <h2>${ore.name}</h2>
+            <p class="hint">${ore.quick}</p>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="fact"><span>Melhor camada</span><b>${ore.bestY}</b></div>
+          <div class="fact"><span>Camada segura</span><b>${ore.safeY}</b></div>
+          <div class="fact"><span>Faixa</span><b>${ore.range}</b></div>
+          <div class="fact"><span>Ferramenta</span><b>${ore.tool}</b></div>
+          <div class="fact"><span>Biome</span><b>${ore.biome}</b></div>
+        </div>
+        <div class="tag-row">${ore.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+      `;
+
+      document.querySelector("#profileGrid").innerHTML = ore.profiles.map(([title, text]) => `
+        <article class="profile-card">
+          <h3>${title}</h3>
+          <p>${text}</p>
+        </article>
+      `).join("");
+
+      document.querySelector("#methodGrid").innerHTML = ore.methods.map(item => methodMarkup(item)).join("");
+      document.querySelector("#diagramGrid").innerHTML = uniqueDiagrams(ore.methods).map(type => diagramMarkup(type, ore.color)).join("");
+      document.querySelector("#routeGrid").innerHTML = ore.routes.map(([title, text, link]) => `
+        <article class="route">
+          <h3>${title}</h3>
+          <p>${text}</p>
+          <a href="${link}" target="_blank" rel="noreferrer">Abrir mapa</a>
+        </article>
+      `).join("");
+    }
+
+    function methodMarkup(item) {
+      return `
+        <article class="method-card">
+          <div class="method-top">
+            <h3>${item.name}</h3>
+            <div class="method-meta">
+              <span class="pill">${item.y}</span>
+              <span class="pill">Risco: ${item.risk}</span>
+              <span class="pill">Custo: ${item.cost}</span>
+            </div>
+          </div>
+          <div class="method-body">
+            <p><strong>Quando usar:</strong> ${item.when}</p>
+            <details open>
+              <summary>Passo a passo</summary>
+              <div class="steps"><ol>${item.steps.map(step => `<li>${step}</li>`).join("")}</ol></div>
+            </details>
+            <div class="split">
+              <div class="pros"><b>Vantagens</b><ul>${item.pros.map(text => `<li>${text}</li>`).join("")}</ul></div>
+              <div class="cons"><b>Limites</b><ul>${item.cons.map(text => `<li>${text}</li>`).join("")}</ul></div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function uniqueDiagrams(methods) {
+      return [...new Set(methods.map(item => item.diagram))].slice(0, 4);
+    }
+
+    function diagramMarkup(type, color) {
+      const data = {
+        branch: ["Túnel 1x2 com galhos", ["", "branch", "", "", "branch", "", "", "branch", "", "", "branch", "", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "branch", "", "ore", "branch", "", "", "branch", "", "ore", "branch", "", ""], "corredor / galhos / minério"],
+        safeBranch: ["Camada segura, menos lava", ["", "", "", "", "", "", "lava", "", "", "", "", "", "", "air", "air", "air", "air", "air", "air", "safe", "air", "air", "air", "air", "air", "air", "", "", "ore", "", "", "", "", "", "", "", "ore", "", ""], "corredor acima da zona mais irritante de lava"],
+        poke: ["Poke-holes / crawl 1x1", ["", "branch", "", "branch", "", "branch", "", "branch", "", "branch", "", "branch", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "ore", "", "", "", "", "", "ore", "", "", "", ""], "buracos laterais expõem faces novas"],
+        cave: ["Caverna controlada", ["air", "air", "air", "air", "lava", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "ore", "", "", "", "air", "air", "ore", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], "ilumine, bloqueie rotas e colete expostos"],
+        mountain: ["Raspar montanha/pico", ["air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "mountain", "ore", "mountain", "", "mountain", "ore", "mountain", "", "mountain", "", "", "", "", "mountain", "mountain", "mountain", "mountain", "mountain", "mountain", "mountain", "mountain", "mountain", "mountain", ""], "pedra exposta em altura"],
+        orevein: ["Seguir veio gigante", ["", "", "ore", "ore", "", "", "", "", "", "", "", "", "", "", "ore", "ore", "ore", "ore", "", "", "", "", "", "", "", "", "", "", "ore", "ore", "", "", "", "", "", "", "", "", ""], "se achou tuff/granite com minério, siga o corpo"],
+        water: ["Parede submersa", ["water", "water", "water", "water", "water", "water", "water", "water", "water", "water", "water", "water", "water", "water", "air", "air", "ore", "", "", "", "water", "water", "ore", "", "", "water", "water", "", "", "", "", "", "", "", "", "", "", "", ""], "bom como oportunidade em aquifers/oceanos"],
+        bed: ["Bed mining no Nether", ["", "", "", "bed", "", "", "lava", "", "", "ore", "", "", "", "air", "air", "safe", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "", "", "", "", "", "", "", "", "", "", ""], "proteja-se atrás de bloco antes de clicar"],
+        tnt: ["TNT manual", ["", "", "", "bed", "", "", "", "bed", "", "", "", "bed", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "", "", "", "ore", "", "", "", "", "ore", "", ""], "TNT espaçada no túnel em Y 15"],
+        nether: ["Parede do Nether", ["", "ore", "", "", "", "", "lava", "", "", "ore", "", "", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "", "", "", "", "", "", "", "", "", "", ""], "mine perto da rota e bloqueie lava"],
+        simple: ["Método simples", ["", "", "", "", "ore", "", "", "", "ore", "", "", "", "", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], "objetivo curto e seguro"],
+        surface: ["Superfície / substituto", ["air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "", "", "ore", "", "", "", "", "ore", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""], "colete sem virar mega-mina"],
+        village: ["Trading", ["air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "safe", "", "", "", "", "", "", "", "", "", "", "", "", ""], "alternativa melhor para moeda"],
+        beacon: ["Beacon + Efficiency", ["", "branch", "", "branch", "", "branch", "", "branch", "", "branch", "", "branch", "", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "branch", "", "ore", "", "branch", "", "", "", "ore", "", "branch", ""], "conforto end-game"],
+        machine: ["Máquina/quarry técnico", ["bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "bed", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "air", "", "", "ore", "", "", "", "ore", "", "", "", "", "", ""], "não é prático no Bedrock vanilla"]
+      };
+      const [title, cells, subtitle] = data[type] || data.simple;
+      return `
+        <div class="diagram">
+          <div class="diagram-title">${title}</div>
+          <div class="blocks" style="--ore: ${color}">
+            ${cells.map(cell => `<div class="cell ${cell}"></div>`).join("")}
+          </div>
+          <div class="legend">
+            <span><i class="air"></i>corredor/ar</span>
+            <span><i class="branch"></i>galho</span>
+            <span><i class="ore" style="--ore: ${color}"></i>minério</span>
+            <span>${subtitle}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    oreSelect.addEventListener("change", renderDetail);
+    search.addEventListener("input", renderLayers);
+    document.querySelector("#reset").addEventListener("click", () => {
+      oreSelect.value = "";
+      search.value = "";
+      renderLayers();
+      renderDetail();
+    });
+
+    setupSelect();
+    renderLayers();
+  </script>
 </body>
 </html>
