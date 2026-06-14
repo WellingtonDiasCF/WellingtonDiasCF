@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Guia detalhado de mineração - Minecraft Bedrock 26</title>
+  <title>Central Minecraft Bedrock 26</title>
   <style>
     :root {
       color-scheme: dark;
@@ -1139,6 +1139,53 @@
       margin: 0;
     }
 
+    .materials-detail {
+      border: 1px solid #dce4ea;
+      border-radius: 8px;
+      background: #fbfcfd;
+      overflow: hidden;
+    }
+
+    .materials-detail summary {
+      min-height: 42px;
+      padding: 11px 12px;
+      cursor: pointer;
+      color: #17202a;
+      font-weight: 900;
+      list-style-position: inside;
+      background: #f1f5f8;
+      border-bottom: 1px solid transparent;
+    }
+
+    .materials-detail[open] summary {
+      border-bottom-color: #dce4ea;
+    }
+
+    .material-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 10px;
+      list-style: none;
+    }
+
+    .material-list li {
+      display: grid;
+      gap: 3px;
+      padding: 8px;
+      border: 1px solid #dce4ea;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #435166;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .material-list b {
+      color: #17202a;
+      font-weight: 900;
+    }
+
     @media (max-width: 1180px) {
       .layer-grid,
       .atlas-grid,
@@ -1860,15 +1907,15 @@
   <main class="shell">
     <header>
       <div>
-        <h1>Guia detalhado de mineração</h1>
-        <p class="sub">
+        <h1 id="pageTitle">Central Minecraft Bedrock 26</h1>
+        <p class="sub" id="pageSubtitle">
           Escolha um minério para abrir métodos completos: melhor camada, alternativas, custo, risco, passo a passo e quando cada técnica vale a pena. Sem filtro, a página mostra só a referência rápida de camadas.
         </p>
       </div>
       <div class="seedbox">
-        <span>Seed de referência</span>
-        <strong>766250999711968938</strong>
-        <span>Bedrock 26.0 - 26.23, Realm vanilla</span>
+        <span id="pageContextLabel">Seed de referência</span>
+        <strong id="pageContextValue">766250999711968938</strong>
+        <span id="pageContextMeta">Bedrock 26.0 - 26.23, Realm vanilla</span>
       </div>
     </header>
 
@@ -2177,6 +2224,65 @@
     const biomeBase = `https://www.chunkbase.com/apps/biome-finder#seed=${seed}&platform=bedrock_26_0&dimension=overworld`;
     const netherBase = `https://www.chunkbase.com/apps/seed-map#seed=${seed}&platform=bedrock_26_0&dimension=nether`;
     const endBase = `https://www.chunkbase.com/apps/seed-map#seed=${seed}&platform=bedrock_26_0&dimension=end`;
+
+    const pageMeta = {
+      miningTab: {
+        title: "Mineração e métodos",
+        subtitle: "Camadas, biomas, estratégias e desenhos de mineração para cada minério importante no Bedrock atual.",
+        label: "Seed de referência",
+        value: seed,
+        meta: "Bedrock 26.0 - 26.23, Realm vanilla"
+      },
+      locationsTab: {
+        title: "Biomas e estruturas da seed",
+        subtitle: "Coordenadas próximas do spawn, rotas por portal do Nether e pontos úteis para explorar sem ficar perdido.",
+        label: "Spawn usado",
+        value: "Overworld X -48 / Z 64",
+        meta: "Nether equivalente X -6 / Z 8"
+      },
+      enchantmentsTab: {
+        title: "Encantamentos do jogo",
+        subtitle: "O que cada encantamento faz, onde aplica, conflitos, fontes e como funciona em cada peça de equipamento.",
+        label: "Catálogo",
+        value: "41 encantamentos",
+        meta: "Armadura, armas, ferramentas, tridente, besta, arco e tesouros"
+      },
+      villagersTab: {
+        title: "Trocas com villagers",
+        subtitle: "Profissões, estações, níveis, preços possíveis e melhores usos para montar um trading hall forte.",
+        label: "Profissões",
+        value: "15 entradas",
+        meta: "Valores base antes de desconto, reputação e demanda"
+      },
+      potionsTab: {
+        title: "Poções e receitas",
+        subtitle: "Receitas, ingredientes, upgrades, versões splash/longa/forte e quando cada poção realmente vale a pena.",
+        label: "Base principal",
+        value: "Poção Estranha",
+        meta: "Verruga do Nether + suporte de poções"
+      },
+      importantFarmsTab: {
+        title: "Farms importantes",
+        subtitle: "Farms essenciais para Realm, com rendimento, dificuldade, riscos, vídeos de referência e materiais necessários.",
+        label: "Farms listadas",
+        value: "13 principais",
+        meta: "Ferro, XP, ouro, creeper, raid, villagers, slime, guardian e mais"
+      },
+      materialFarmsTab: {
+        title: "Farms por material",
+        subtitle: "Escolha o recurso que você quer e veja qual farm resolve melhor, alternativas e gargalos comuns.",
+        label: "Materiais alvo",
+        value: "15 recursos",
+        meta: "Do começo do mundo ao endgame"
+      },
+      redstoneTab: {
+        title: "Redstone para farms",
+        subtitle: "Componentes, lógica básica e circuitos reutilizáveis para entender e consertar farms sem depender só de tutorial.",
+        label: "Componentes + sistemas",
+        value: "36 tópicos",
+        meta: "Sinal, clock, funil, coleta, sorter e automação"
+      }
+    };
 
     const ores = [
       {
@@ -4440,6 +4546,133 @@
         ["Pilhagem ajuda muito se o método permite matar manualmente.", "Tridente é drop raro, então tenha paciência.", "Boa depois de ter Respiração Aquática."],
         "Nem todo drowned dropa tridente; só os que podem carregar/gerar com ele têm chance relevante.")
     ];
+
+    const farmMaterials = {
+      iron: [
+        ["Villagers", "10 a 20 aldeões, dependendo do modelo. Use aldeões já vinculados a camas/estações."],
+        ["Camas", "20 camas é o padrão mais comum em designs Bedrock grandes."],
+        ["Estações de trabalho", "10 a 20 estações: composteiras, mesas de flechar ou outra estação fácil."],
+        ["Blocos de construção", "6 a 12 stacks de blocos sólidos para plataforma, paredes e isolamento."],
+        ["Água", "2 a 8 baldes para empurrar golems até a morte."],
+        ["Lava ou campfires", "1 lava com placas/portões ou 4 a 8 fogueiras para matar golems."],
+        ["Funis e baús", "4 a 12 funis e 2 a 4 baús para coleta de ferro e papoulas."],
+        ["Vidro/blocos transparentes", "Opcional, mas ajuda a enxergar villagers e golems sem abrir a farm."]
+      ],
+      xp: [
+        ["Blocos de construção", "4 a 10 stacks, variando se for spawner, torre de mobs ou farm de forno."],
+        ["Baús e funis", "2 a 8 baús e 4 a 16 funis para drops e coleta."],
+        ["Água", "2 a 8 baldes para conduzir mobs ou itens."],
+        ["Lajes/alçapões/botões", "1 a 3 stacks para controlar spawn, altura e caminhos."],
+        ["Espada com Pilhagem", "Opcional, mas melhora drops em farms manuais."],
+        ["Iluminação", "Tochas ou lanternas para spawn-proof ao redor."],
+        ["Área AFK segura", "Blocos, cama, escudo/armadura e acesso protegido."]
+      ],
+      gold: [
+        ["Obsidiana", "Muito variável: farms por portal usam várias stacks; farms de Nether isolado usam pouca ou nenhuma."],
+        ["Blocos de construção", "8 a 20 stacks para plataformas, proteção e funil de queda."],
+        ["Alçapões/lajes", "1 a 4 stacks para controlar pathfinding/spawn."],
+        ["Funis e baús", "16+ funis e baús grandes, porque ouro gera muito drop secundário."],
+        ["Sistema de filtro", "Comparadores, repetidores, tochas, funis e itens filler se quiser separar ouro/carne/espadas."],
+        ["Resistência ao Fogo", "Poção altamente recomendada durante construção."],
+        ["Espada com Pilhagem", "Recomendada se o design usa morte pelo jogador para XP/drop."]
+      ],
+      creeper: [
+        ["Blocos de construção", "10 a 25 stacks para plataformas e teto."],
+        ["Alçapões ou botões", "Várias stacks para impedir mobs altos e ajustar spawn de creeper."],
+        ["Gatos", "Normalmente 2+ por módulo se o design usa medo de gato."],
+        ["Água", "Baldes para conduzir creepers até queda/morte."],
+        ["Funis e baús", "8 a 24 funis e baús grandes para pólvora."],
+        ["Lajes/tochas", "Para spawn-proof no topo e ao redor."],
+        ["Plataforma AFK", "Blocos para ficar na distância correta de spawn."]
+      ],
+      raid: [
+        ["Villager e cama", "1 villager protegido e 1 cama bem posicionada são o coração da farm."],
+        ["Outpost ou ponto de raid", "Você precisa de capitão/pillager para iniciar o ciclo."],
+        ["Blocos de construção", "10 a 30 stacks para plataforma, proteção e funil de mobs."],
+        ["Água/lava/fogueiras", "Para mover e finalizar raiders, dependendo do modelo."],
+        ["Funis e baús", "Muitos: raid gera esmeralda, totem, redstone, glowstone, garrafa, sela e lixo."],
+        ["Tridente killer ou espada", "Alguns designs Bedrock usam trident killer; outros usam morte manual."],
+        ["Armadura boa e totem", "Recomendado para testar, porque raid farm mal ajustada é perigosa."]
+      ],
+      villager: [
+        ["2 villagers iniciais", "Base mínima para breeder."],
+        ["Camas", "3 ou mais; use camas extras para permitir bebês."],
+        ["Comida", "Pão, cenoura, batata ou beterraba. Tenha várias stacks."],
+        ["Blocos de proteção", "Vidro, blocos sólidos, portas/alçapões para impedir zumbis."],
+        ["Transporte", "Barcos, trilhos, minecarts ou canais de água."],
+        ["Iluminação", "Tochas/lanternas para evitar mobs."],
+        ["Área separada", "Construa longe o suficiente de trading hall/iron farm para não misturar vilas."]
+      ],
+      sugar_bamboo: [
+        ["Cana ou bambu inicial", "Pelo menos 1 item para plantar; mais itens aceleram o começo."],
+        ["Blocos de base", "Terra/areia para cana; terra/grama/areia para bambu."],
+        ["Água", "Obrigatória para cana, ao lado do bloco de plantio."],
+        ["Pistões", "1 por coluna ou por módulo de colheita."],
+        ["Observadores", "1 por módulo/linha de detecção."],
+        ["Redstone", "Pó, repetidores se a linha for longa."],
+        ["Coleta", "Água + funis ou carrinho com funil + trilhos."],
+        ["Baús", "2+ baús, porque cana/bambu enche rápido quando expande."]
+      ],
+      pumpkin_melon: [
+        ["Sementes", "Abóbora e/ou melancia."],
+        ["Farmland e água", "Enxada, água e iluminação para manter caules."],
+        ["Pistões", "1 pistão por ponto onde o fruto nasce ou por módulo."],
+        ["Observadores", "Para detectar fruto ou caule, dependendo do design."],
+        ["Redstone", "Pó e repetidores para ligar pistões."],
+        ["Coleta", "Carrinho com funil é o mais comum; água também funciona em alguns layouts."],
+        ["Trilhos energizados", "Se usar carrinho coletor."],
+        ["Farmers", "Opcional, mas transforma abóbora/melancia em esmeraldas."]
+      ],
+      slime: [
+        ["Slime chunk ou pântano", "Use Chunkbase ou método in-game para escolher local."],
+        ["Picareta boa", "Você vai cavar bastante; Efficiency e beacon ajudam muito."],
+        ["Blocos de plataforma", "Lajes ou blocos sólidos para camadas de spawn."],
+        ["Iluminação", "Slimes spawnam com luz, então ilumine cavernas concorrentes também."],
+        ["Iron golems/neve", "Usados em vários designs para atrair slimes."],
+        ["Funis/baús", "Coleta de slimeballs."],
+        ["Magma/campfire/lava", "Método de morte, conforme o design."],
+        ["Spawn-proof ao redor", "O item mais importante para rendimento real."]
+      ],
+      guardian: [
+        ["Monumento oceânico", "Precisa achar e preparar o monumento."],
+        ["Poções", "Respiração Aquática e Visão Noturna facilitam muito."],
+        ["Leite", "Para remover Mining Fatigue enquanto limpa elder guardians."],
+        ["Blocos de construção", "Muitas stacks para plataforma, funil, paredes e área AFK."],
+        ["Areia/esponja", "Se for design drenado; designs sem drenar usam menos."],
+        ["Água, placas e funis", "Para conduzir guardians e itens."],
+        ["Sistema de morte", "Lava, queda, tridente killer ou morte manual."],
+        ["Arma/armadura boa", "Guardians batem forte durante construção."]
+      ],
+      blaze: [
+        ["Spawner de blaze", "Não quebre. A farm depende dele."],
+        ["Blocos não inflamáveis", "Pedra, deepslate, tijolos do Nether ou vidro."],
+        ["Poção de resistência ao fogo", "Muito recomendada na construção."],
+        ["Lajes/vidro", "Para isolar e enxergar sem abrir buraco perigoso."],
+        ["Funil de queda", "Blocos e pistões/opcionais para juntar blazes."],
+        ["Espada", "Pilhagem ajuda muito nos blaze rods."],
+        ["Baús/funis", "Para blaze rods e drops."],
+        ["Escudo/comida", "Segurança básica enquanto ajusta o spawner."]
+      ],
+      bone_meal: [
+        ["Item compostável", "Alga, sementes, musgo, cactus, bambu ou excedente de plantação."],
+        ["Composteiras", "1 por linha pequena; várias para farm maior."],
+        ["Funis", "Entrada por cima e saída por baixo."],
+        ["Baús", "Baú de input e baú de bone meal."],
+        ["Pistões/observadores", "Se a fonte for alga, bambu ou crop automática."],
+        ["Água", "Para alga/cana ou condução de itens."],
+        ["Redstone", "Para módulos automáticos e descarte de excesso."]
+      ],
+      trident: [
+        ["Área de oceano/rio", "Drowned precisam de água adequada para spawn."],
+        ["Blocos de construção", "Plataforma, funil de queda e proteção."],
+        ["Água", "Canais para mover drowned."],
+        ["Ovos de tartaruga ou villager", "Alguns designs usam isca; proteja bem."],
+        ["Funis/baús", "Para conchas, cobre, ouro, carne podre e tridentes."],
+        ["Espada com Pilhagem", "Ajuda se o método permite morte pelo jogador."],
+        ["Respiração Aquática", "Facilita construção e manutenção."],
+        ["Iluminação/spawn-proof", "Reduz spawn concorrente fora da farm."]
+      ]
+    };
 
     function material(name, categories, priority, best, alternatives, why, when, blockers, farms) {
       return { name, categories, priority, best, alternatives, why, when, blockers, farms };
@@ -7767,6 +8000,11 @@
 
     const oreSelect = document.querySelector("#oreSelect");
     const search = document.querySelector("#search");
+    const pageTitle = document.querySelector("#pageTitle");
+    const pageSubtitle = document.querySelector("#pageSubtitle");
+    const pageContextLabel = document.querySelector("#pageContextLabel");
+    const pageContextValue = document.querySelector("#pageContextValue");
+    const pageContextMeta = document.querySelector("#pageContextMeta");
     const layerGrid = document.querySelector("#layerGrid");
     const detailShell = document.querySelector("#detailShell");
     const layerPanel = document.querySelector("#layerPanel");
@@ -7839,8 +8077,19 @@
           document.querySelectorAll(".tab-page").forEach(page => {
             page.classList.toggle("active", page.id === target);
           });
+          updatePageHeader(target);
         });
       });
+    }
+
+    function updatePageHeader(target) {
+      const meta = pageMeta[target] || pageMeta.miningTab;
+      pageTitle.textContent = meta.title;
+      pageSubtitle.textContent = meta.subtitle;
+      pageContextLabel.textContent = meta.label;
+      pageContextValue.textContent = meta.value;
+      pageContextMeta.textContent = meta.meta;
+      document.title = `${meta.title} - Central Minecraft Bedrock 26`;
     }
 
     function renderLocationAtlas() {
@@ -8108,6 +8357,15 @@
     }
 
     function farmCard(item) {
+      const materials = farmMaterials[item.id] || [];
+      const materialsMarkup = materials.length
+        ? `<details class="materials-detail">
+            <summary>Materiais necessários e preparação</summary>
+            <ul class="material-list">
+              ${materials.map(([name, detail]) => `<li><b>${name}</b><span>${detail}</span></li>`).join("")}
+            </ul>
+          </details>`
+        : "";
       return `
         <article class="info-card trade">
           <div class="info-head">
@@ -8128,6 +8386,7 @@
             <li><b>Dicas de rendimento:</b> ${item.tips.join(" ")}</li>
             <li><b>Risco/cuidado:</b> ${item.warnings}</li>
           </ul>
+          ${materialsMarkup}
           <div class="resource-links">
             ${item.video.map(([label, url]) => `<a href="${url}" target="_blank" rel="noreferrer">${label}</a>`).join("")}
           </div>
@@ -8886,6 +9145,7 @@
     });
 
     setupTabs();
+    updatePageHeader("miningTab");
     setupSelect();
     renderLayers();
     renderLocationAtlas();
