@@ -1092,6 +1092,53 @@
       color: #17202a;
     }
 
+    .resource-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .resource-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 9px;
+      border-radius: 6px;
+      border: 1px solid #dce4ea;
+      background: #f7f9fb;
+      color: #17202a;
+      font-size: 12px;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .resource-links a:hover {
+      border-color: #b6c7d6;
+      background: #eef3f7;
+    }
+
+    .redstone-layout {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid #dce4ea;
+      border-radius: 8px;
+      background: #10161a;
+      color: #e9f4f3;
+      font-family: "Segoe UI Mono", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .redstone-key {
+      color: #9db4c3;
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
     @media (max-width: 1180px) {
       .layer-grid,
       .atlas-grid,
@@ -1830,6 +1877,10 @@
       <button class="tab-button" type="button" data-tab-target="locationsTab">Biomas e estruturas</button>
       <button class="tab-button" type="button" data-tab-target="enchantmentsTab">Encantamentos</button>
       <button class="tab-button" type="button" data-tab-target="villagersTab">Trocas villagers</button>
+      <button class="tab-button" type="button" data-tab-target="potionsTab">Poções</button>
+      <button class="tab-button" type="button" data-tab-target="importantFarmsTab">Farms importantes</button>
+      <button class="tab-button" type="button" data-tab-target="materialFarmsTab">Farms por material</button>
+      <button class="tab-button" type="button" data-tab-target="redstoneTab">Redstone para farms</button>
     </nav>
 
     <section class="tab-page active" id="miningTab">
@@ -1974,6 +2025,147 @@
         <div class="panel-body">
           <div class="catalog-grid" id="villagerGrid"></div>
           <div class="empty-state hidden" id="villagerEmpty">Nenhuma troca encontrada nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="potionsTab">
+      <section class="toolbar guide-toolbar" aria-label="Filtros de poções">
+        <select id="potionCategory" aria-label="Filtrar poções">
+          <option value="all">Todas as poções</option>
+          <option value="combate">Combate</option>
+          <option value="exploracao">Exploração</option>
+          <option value="utilidade">Utilidade</option>
+          <option value="negativa">Negativas</option>
+        </select>
+        <input id="potionSearch" type="search" placeholder="Buscar efeito, ingrediente, uso ou receita">
+        <button id="potionReset" type="button">Limpar</button>
+      </section>
+
+      <section class="panel">
+        <h2>Resumo de poções</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="potionOverview"></div>
+          <p class="hint">
+            A maioria das poções começa com Garrafa de água + Verruga do Nether para virar Poção Estranha. Redstone aumenta duração, glowstone aumenta potência quando possível, pólvora transforma em arremessável e bafo do dragão transforma em persistente.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Poções e receitas</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="potionGrid"></div>
+          <div class="empty-state hidden" id="potionEmpty">Nenhuma poção encontrada nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="importantFarmsTab">
+      <section class="toolbar guide-toolbar" aria-label="Filtros de farms importantes">
+        <select id="farmCategory" aria-label="Filtrar farms">
+          <option value="all">Todas as farms</option>
+          <option value="inicio">Início de mundo</option>
+          <option value="xp">XP</option>
+          <option value="villager">Villager e esmeralda</option>
+          <option value="nether">Nether</option>
+          <option value="redstone">Redstone/automática</option>
+          <option value="endgame">Endgame</option>
+        </select>
+        <input id="farmSearch" type="search" placeholder="Buscar farm, material, dificuldade ou vídeo">
+        <button id="farmReset" type="button">Limpar</button>
+      </section>
+
+      <section class="panel">
+        <h2>Resumo das farms</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="farmOverview"></div>
+          <p class="hint">
+            As recomendações priorizam Bedrock/Realm, baixo risco de quebrar em atualização e utilidade real no survival. Links de vídeo são referência para construção, mas o texto resume o objetivo e os cuidados principais.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Farms importantes detalhadas</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="farmGrid"></div>
+          <div class="empty-state hidden" id="farmEmpty">Nenhuma farm encontrada nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="materialFarmsTab">
+      <section class="toolbar guide-toolbar" aria-label="Filtros de farms por material">
+        <select id="materialCategory" aria-label="Filtrar materiais">
+          <option value="all">Todos os materiais</option>
+          <option value="minerio">Minério e ferramenta</option>
+          <option value="xp">XP e encantamento</option>
+          <option value="redstone">Redstone e técnica</option>
+          <option value="construcao">Construção</option>
+          <option value="comida">Comida e vila</option>
+          <option value="nether">Nether/End</option>
+        </select>
+        <input id="materialSearch" type="search" placeholder="Buscar material, farm, prioridade ou observação">
+        <button id="materialReset" type="button">Limpar</button>
+      </section>
+
+      <section class="panel">
+        <h2>Resumo por material</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="materialOverview"></div>
+          <p class="hint">
+            Esta aba responde “qual farm faço para conseguir X?”. Cada cartão mostra a melhor farm, alternativas, quando vale construir e o que costuma limitar o rendimento.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Materiais e melhores farms</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="materialGrid"></div>
+          <div class="empty-state hidden" id="materialEmpty">Nenhum material encontrado nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="redstoneTab">
+      <section class="toolbar guide-toolbar" aria-label="Filtros de redstone">
+        <select id="redstoneCategory" aria-label="Filtrar redstone">
+          <option value="all">Tudo: componentes e sistemas</option>
+          <option value="componentes">Somente componentes</option>
+          <option value="sistemas">Somente sisteminhas</option>
+          <option value="sinal">Sinal e lógica</option>
+          <option value="tempo">Tempo, pulso e clock</option>
+          <option value="itens">Itens e armazenamento</option>
+          <option value="farm">Colheita e mobs</option>
+        </select>
+        <input id="redstoneSearch" type="search" placeholder="Buscar componente, farm, função ou problema">
+        <button id="redstoneReset" type="button">Limpar</button>
+      </section>
+
+      <section class="panel">
+        <h2>Resumo de redstone para farms</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="redstoneOverview"></div>
+          <p class="hint">
+            Pense em redstone como quatro coisas: detectar, transmitir, temporizar e mover. Quase toda farm é uma combinação de sensor, pulso, atuador e coleta.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" id="redstoneComponentsPanel">
+        <h2>Componentes de redstone</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="redstoneComponentGrid"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="redstoneSystemsPanel">
+        <h2>Sisteminhas comuns em farms</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="redstoneSystemGrid"></div>
+          <div class="empty-state hidden" id="redstoneEmpty">Nada de redstone encontrado nesse filtro.</div>
         </div>
       </section>
     </section>
@@ -4135,6 +4327,286 @@
         [
           tier("Sem ofertas", [tr("Coloque uma estação de trabalho", "Profissão correspondente", "Só funciona se não for nitwit e se o villager puder reivindicar a estação.")])
         ])
+    ];
+
+    function potion(name, categories, base, ingredient, upgrades, use, details, cautions) {
+      return { name, categories, base, ingredient, upgrades, use, details, cautions };
+    }
+
+    const potionGuide = [
+      potion("Poção Estranha", ["utilidade"], "Garrafa de água", "Verruga do Nether", "Base para quase todas as poções úteis.", "Preparar qualquer poção principal.", "Faça em suporte de poções com blaze powder como combustível. Sem ela, muitos ingredientes viram poções mundanas ou sem efeito útil.", "Não beba esperando efeito; ela serve como etapa intermediária."),
+      potion("Cura Instantânea", ["combate", "utilidade"], "Poção Estranha", "Melancia reluzente", "Glowstone aumenta para Cura II; pólvora cria splash.", "Recuperar vida rapidamente.", "Cura na hora. Splash cura aliados e você, mas causa dano em mortos-vivos como zumbis, esqueletos e wither.", "Se jogar splash perto de undead e aliados ao mesmo tempo, o efeito divide o caos: cura vivos e machuca mortos-vivos."),
+      potion("Regeneração", ["combate", "exploracao"], "Poção Estranha", "Lágrima de ghast", "Redstone aumenta duração; glowstone aumenta para Regeneração II.", "Lutas longas, Wither, Ender Dragon, raids e Warden se você insistir na coragem.", "Recupera corações aos poucos. Regeneração II cura mais rápido, mas dura menos; versão longa é melhor para exploração e combate prolongado.", "Não salva de burst muito alto; combine com comida boa e armadura."),
+      potion("Força", ["combate"], "Poção Estranha", "Pó de blaze", "Redstone aumenta duração; glowstone aumenta para Força II.", "Aumentar dano corpo a corpo.", "Excelente com espada, machado e maça. Força II é para luta curta; duração estendida é melhor para raids e bastiões.", "Não aumenta dano de arco/besta; é corpo a corpo."),
+      potion("Velocidade", ["exploracao"], "Poção Estranha", "Açúcar", "Redstone aumenta duração; glowstone aumenta para Velocidade II.", "Explorar, fugir, transportar item, correr em túneis.", "Aumenta velocidade de movimento e salto horizontal. Boa com gelo, Elytra no chão e Nether hub.", "Velocidade alta em ponte estreita pode derrubar você se não estiver agachado."),
+      potion("Salto", ["exploracao"], "Poção Estranha", "Pé de coelho", "Redstone aumenta duração; glowstone aumenta altura.", "Subir terreno quebrado e construir.", "Aumenta altura do pulo e reduz um pouco dano de queda indiretamente por facilitar movimentos. Boa em montanhas e cavernas.", "Não substitui Queda Suave nem balde de água."),
+      potion("Resistência ao Fogo", ["exploracao", "combate", "nether"], "Poção Estranha", "Creme de magma", "Redstone aumenta duração.", "Nether, lava, blazes, bastiões e mineração perigosa.", "Anula dano de fogo e lava enquanto ativa. É uma das poções mais importantes para Realm, porque evita perda de item em lava.", "Não protege contra dano de queda, ataque físico ou explosão."),
+      potion("Respiração Aquática", ["exploracao"], "Poção Estranha", "Baiacu", "Redstone aumenta duração.", "Monumentos, ocean ruins, construção subaquática.", "Impede perder bolhas de ar. Combine com Visão Noturna e capacete com Respiração/Aqua Affinity.", "Não remove lentidão de minerar; para isso use Aqua Affinity no capacete."),
+      potion("Visão Noturna", ["exploracao"], "Poção Estranha", "Cenoura dourada", "Redstone aumenta duração.", "Cavernas, oceanos, Nether e mineração.", "Clareia tudo visualmente sem colocar tocha. Excelente para encontrar minérios, mobs e estruturas no escuro.", "Pode enganar você sobre iluminação real: mobs ainda spawnam se o nível de luz permitir."),
+      potion("Invisibilidade", ["exploracao"], "Visão Noturna", "Olho de aranha fermentado", "Redstone aumenta duração.", "Evitar mobs, explorar estruturas e aproximar de inimigos.", "Funciona melhor sem armadura visível na mão/corpo. Mobs ainda podem detectar se você encostar, atacar ou estiver muito perto.", "Armadura equipada continua visível e reduz muito o valor da poção."),
+      potion("Queda Lenta", ["exploracao", "combate"], "Poção Estranha", "Membrana de phantom", "Redstone aumenta duração.", "End, Elytra, torres, maça e lugares altos.", "Faz cair devagar e remove dano de queda. Muito boa para lutar contra dragão, explorar cidades do End e recuperar de erro com Elytra.", "Pode atrapalhar se você precisa descer rápido ou fugir verticalmente."),
+      potion("Mestre Tartaruga", ["combate"], "Poção Estranha", "Casco de tartaruga", "Redstone aumenta duração; glowstone aumenta resistência/lentidão.", "Tankar dano pesado em lutas planejadas.", "Dá Resistência alta e Lentidão ao mesmo tempo. É poção defensiva extrema para segurar pancada, não para mobilidade.", "A lentidão é séria; use quando já está posicionado."),
+      potion("Veneno", ["negativa"], "Poção Estranha", "Olho de aranha", "Redstone aumenta duração; glowstone aumenta para Veneno II.", "Enfraquecer mobs/jogadores vivos.", "Drena vida até meio coração, mas não mata sozinho. Splash é a forma prática em combate.", "Undead são imunes ou reagem diferente; para undead use Dano Instantâneo."),
+      potion("Fraqueza", ["negativa", "utilidade"], "Garrafa de água ou Poção Estranha", "Olho de aranha fermentado", "Redstone aumenta duração; pólvora para splash.", "Curar villager zumbi e reduzir dano inimigo.", "Para curar villager zumbi, jogue splash de Fraqueza e dê maçã dourada. Também reduz dano corpo a corpo do alvo.", "Não esqueça de prender o villager zumbi antes; ele pode morrer no sol ou fugir."),
+      potion("Lentidão", ["negativa"], "Velocidade ou Salto", "Olho de aranha fermentado", "Redstone aumenta duração; glowstone pode aumentar nível em variantes.", "Controlar inimigos.", "Reduz velocidade de movimento. Funciona melhor como splash/lingering em corredor, raid ou PvP.", "Em mobs à distância, lentidão não impede flechas."),
+      potion("Dano Instantâneo", ["negativa", "combate"], "Cura ou Veneno", "Olho de aranha fermentado", "Glowstone aumenta para Dano II; splash é recomendado.", "Causar dano mágico rápido.", "Machuca vivos instantaneamente e cura mortos-vivos. Muito usada como splash em combate específico.", "Contra zumbis/esqueletos/wither, você pode acabar curando o alvo."),
+      potion("Infestação", ["negativa"], "Poção Estranha", "Pedra infestada", "Redstone aumenta duração.", "Gerar silverfish quando o alvo toma dano.", "Efeito moderno: uma entidade afetada pode gerar silverfish ao receber dano. É mais situacional e caótico do que farm estável.", "Pode virar bagunça dentro da base."),
+      potion("Gotejamento", ["negativa", "utilidade"], "Poção Estranha", "Bloco de slime", "Redstone aumenta duração.", "Fazer slimes surgirem de alvos afetados.", "Quando a entidade afetada morre, pode gerar slimes. Útil para brincadeiras e setups específicos, não substitui farm de slime chunk.", "Evite usar em lugar apertado se não quer mobs extras."),
+      potion("Tecelagem", ["negativa", "utilidade"], "Poção Estranha", "Teia", "Redstone aumenta duração.", "Criar teias ao morrer.", "Entidade afetada pode deixar teia ao morrer. Pode ser usada para obter teias em situações específicas ou criar armadilha.", "Teias podem travar você também."),
+      potion("Vento Carregado", ["negativa", "utilidade"], "Poção Estranha", "Bastão de breeze", "Redstone aumenta duração.", "Explodir rajada de vento quando o alvo morre.", "Ao morrer, a entidade afetada libera uma rajada de vento. É útil para mecânicas criativas, empurrões e caos controlado.", "Pode derrubar itens/jogadores de plataformas.")
+    ];
+
+    function farm(id, name, categories, priority, difficulty, output, video, summary, build, tips, warnings) {
+      return { id, name, categories, priority, difficulty, output, video, summary, build, tips, warnings };
+    }
+
+    const importantFarms = [
+      farm("iron", "Farm de ferro", ["inicio", "villager"], "Muito alta", "Média", "Ferro, papoulas e XP indireto por trading",
+        [["Farm de Ferro Bedrock 1.21/26+", "https://www.youtube.com/watch?v=FvzG3QnlsS8"], ["Outra referência de ferro Bedrock", "https://www.youtube.com/watch?v=ptlio3ifTrE"]],
+        "A primeira farm grande que vale fazer. Ferro vira funil, trilho, bigorna, ferramentas, blocos técnicos e troca com villagers.",
+        ["Use villagers vinculados a camas e estações, isolados de outros pontos de vila.", "Garanta área de spawn dos iron golems controlada com água levando para lava/campfire.", "Faça longe de vilas/trading halls para não misturar centros de vila."],
+        ["Prioridade máxima depois de estabilizar comida e villagers.", "Se parar, revise cama, profissão, acesso à estação e distância de outras camas.", "Em Realm, prefira design simples e leve."],
+        "O problema mais comum é juntar sem querer com outra vila. Cama perdida perto da farm pode deslocar o centro e matar rendimento."),
+      farm("xp", "Farm de XP fácil", ["inicio", "xp"], "Muito alta", "Fácil a média", "XP para reparar e encantar",
+        [["Farm de XP Bedrock 1.21/26+", "https://www.youtube.com/watch?v=HgZ61LPakJA"], ["Farm de XP recente Bedrock", "https://www.youtube.com/watch?v=2DF_kwkM7lo"]],
+        "Serve para consertar Remendo e fechar equipamentos. Pode ser spawner, mob trap, forno/kelp ou desenho específico de Bedrock.",
+        ["Escolha um método compatível com sua fase: spawner se achou dungeon, mob trap se não achou, Enderman se já chegou no End.", "Tenha área segura de coleta e descarte de drops.", "Coloque baús suficientes para não entupir."],
+        ["Se sua armadura tem Remendo, equipe o item certo antes de coletar XP.", "Spawner é estável, mas rende menos que farms endgame.", "Mob cap e distância AFK importam muito."],
+        "Farms baseadas em bug mudam muito. Prefira designs recentes e sem exploração frágil."),
+      farm("gold", "Farm de ouro e XP", ["nether", "xp", "endgame"], "Alta", "Média a alta", "Ouro, XP, carne podre e espadas",
+        [["Farm de Ouro e XP Bedrock", "https://www.youtube.com/watch?v=2ky_-T4TEAM"], ["Farm de ouro 1.21", "https://www.youtube.com/watch?v=xLZptJtKc7c"]],
+        "Base para piglin bartering, maçãs douradas, trilhos energizados e XP. Normalmente usa zombified piglins e regras de spawn do Nether.",
+        ["Construa em local isolado do Nether ou acima do teto se o método da edição permitir.", "Controle aggro/coleta com segurança e funis.", "Use espada com Pilhagem se a farm exigir morte pelo jogador."],
+        ["Ótima depois de ter boa armadura e Resistência ao Fogo.", "Pode gerar muito item inútil; filtre espadas e carne.", "Combine com bartering para transformar ouro em recursos variados."],
+        "Não misture com portal perto de base sem entender pathfinding/spawn; piglins podem escapar ou travar coleta."),
+      farm("creeper", "Farm de creeper/pólvora", ["redstone", "endgame"], "Alta", "Média", "Pólvora para foguetes, TNT e poções splash",
+        [["Creeper Bedrock fácil e eficiente", "https://www.youtube.com/watch?v=_ndAjIZ5aTE"], ["Creeper Bedrock 26.1/1.21+", "https://www.youtube.com/watch?v=q5GT87T9Yac"]],
+        "Essencial quando você pega Elytra. Pólvora vira foguete e também sustenta poções arremessáveis.",
+        ["Faça em oceano ou área spawn-proofada para reduzir mobs concorrentes.", "Use alçapões/botões/gatos ou desenho específico para filtrar creepers.", "Deixe plataforma AFK na distância correta."],
+        ["Quanto melhor o spawn-proof ao redor, melhor o rendimento.", "Gatos podem ser chatos de posicionar; designs recentes sem gatos podem ser mais simples.", "Foguete nível 1 costuma ser suficiente para Elytra."],
+        "Se esqueletos/zumbis aparecem, o filtro de altura ou botões/alçapões está errado."),
+      farm("raid", "Farm de raid/pillager", ["villager", "endgame"], "Alta", "Alta", "Esmeraldas, totens, redstone, glowstone, garrafas e livros",
+        [["Farm de Pillager Bedrock 1.21", "https://www.youtube.com/watch?v=RNukHIxtbPE"], ["Esmeralda e Totem Bedrock", "https://www.youtube.com/watch?v=02nt83BQ0lI"]],
+        "Farm poderosa, mas exige cuidado. Gera totem e muitas esmeraldas, acelerando qualquer trading hall.",
+        ["Localize outpost ou ponto de raid confiável.", "Isole villager e cama corretamente.", "Controle local de spawn dos raiders e ponto de morte/queda."],
+        ["Construa depois de ter equipamento bom.", "Totem muda completamente sua segurança em Realm.", "Use armazenamento grande; raid farm produz drops variados."],
+        "Raid farm mal isolada pode matar villager e quebrar tudo. Teste com itens baratos primeiro."),
+      farm("villager", "Breeder de villagers", ["inicio", "villager"], "Muito alta", "Fácil a média", "Villagers para trading hall, iron farm e reposição",
+        [["Farm/Breeder de villagers 1.21+", "https://www.youtube.com/watch?v=3oxd99Ilt_c"], ["Farm de Villagers Bedrock", "https://www.youtube.com/watch?v=FDY5UweBguc"]],
+        "Multiplica villagers para biblioteca, fazendeiros, armeiros e farms. É a infraestrutura por trás de trocas infinitas.",
+        ["Use camas extras, comida e caminho controlado para bebês saírem.", "Separe breeder do trading hall e da iron farm.", "Transporte por barco, trilho ou água."],
+        ["Cenoura/batata/pão alimentam reprodução.", "Deixe iluminação forte e proteção contra zumbi.", "Tenha plano para curar descontos depois."],
+        "Se ficar perto demais de outras camas/estações, pode bagunçar profissões e vilas."),
+      farm("sugar_bamboo", "Farm de cana e bambu", ["inicio", "redstone"], "Alta", "Fácil", "Papel, foguetes, andaime, combustível e bambu",
+        [["Cana e Bambu automática", "https://www.youtube.com/watch?v=VGqCvUVStZw"], ["Farms iniciais variadas", "https://www.youtube.com/watch?v=ZgWM-sloOiY"]],
+        "Cana sustenta librarians e foguetes; bambu sustenta andaime, combustível e crafting moderno.",
+        ["Use observador + pistão para colher quando crescer.", "Cana precisa de água ao lado; bambu pode crescer em vários blocos.", "Colete com funil/carrinho ou água."],
+        ["Faça cedo, mesmo pequena.", "Papel vira esmeralda com cartógrafo/librarian.", "Bambu acelera construção vertical com andaime."],
+        "Em Bedrock, confira se o observador detecta a altura certa e se itens não ficam presos no bloco."),
+      farm("pumpkin_melon", "Farm de abóbora e melancia", ["inicio", "villager", "redstone"], "Alta", "Fácil a média", "Esmeraldas com fazendeiro e comida/crafting",
+        [["Melancia e Abóbora 1.21", "https://www.youtube.com/watch?v=W4wcb9W1ef0"], ["Farms simples com melancia/abóbora", "https://www.youtube.com/watch?v=NlAhD8LVqZI"]],
+        "Uma das melhores bases de esmeralda limpa com farmers. Não depende de mob e escala muito bem.",
+        ["Plante caules com bloco livre ao lado.", "Use pistão para quebrar fruto e água/carrinho para coletar.", "Tenha farmers comprando abóbora e melancia."],
+        ["Ótima para Realm porque pesa pouco.", "Pode ser modular: comece pequena e replique.", "Combine com villager hall para emerald loop."],
+        "Não deixe pistão quebrar caule. O fruto nasce ao lado, não no bloco do caule."),
+      farm("slime", "Farm de slime", ["redstone", "endgame"], "Média", "Média a alta", "Slimeballs para pistão grudento, leads e blocos",
+        [["Slime Bedrock 1.21", "https://www.youtube.com/watch?v=ekuSMjkXfaA"], ["Slime Bedrock 26.1+", "https://www.youtube.com/watch?v=MkpXMmflDpg"]],
+        "Necessária para redstone avançada. Pode usar slime chunk ou pântano, dependendo do design.",
+        ["Descubra slime chunk com ferramenta confiável ou use pântano em lua adequada.", "Cave plataformas e ilumine cavernas ao redor.", "Use golem/neve/água para atrair e matar."],
+        ["Rendimento depende brutalmente de spawn-proof.", "Faça quando já tiver boa picareta e beacon ajuda muito.", "Slime é gargalo de pistão grudento."],
+        "Se outras cavernas próximas estão escuras, elas roubam mob cap e a farm parece quebrada."),
+      farm("guardian", "Farm de guardian", ["xp", "endgame"], "Média", "Alta", "Prismarinho, lanternas do mar, peixes e XP",
+        [["Guardian sem secar oceano", "https://www.youtube.com/watch?v=-xvJ86XLmCg"], ["Guardian XP Bedrock", "https://www.youtube.com/watch?v=2KumNIc4ONk"]],
+        "Farm de construção e XP ligada a monumento oceânico. Boa para blocos bonitos e XP, mas exige preparo.",
+        ["Ache monumento, mate elder guardians e defina se vai drenar ou usar design sem drenar.", "Controle pontos de spawn dos guardians.", "Leve Respiração Aquática, Visão Noturna e leite."],
+        ["Vale mais no mid/endgame.", "Prismarinho e sea lantern são ótimos para base.", "Sem drenar é mais acessível; drenada costuma render mais."],
+        "Mining Fatigue atrapalha tudo. Prepare leite, axolotl ou estratégia para elder guardians."),
+      farm("blaze", "Farm de blaze", ["nether", "xp"], "Alta", "Média", "Blaze rods, pó de blaze e XP",
+        [["Blaze farm em português", "https://www.youtube.com/watch?v=6PE5leJMW7o"]],
+        "Blaze rods são obrigatórios para poções e olhos do End. Se achou spawner na fortaleza, vale transformar em farm.",
+        ["Isole o spawner sem quebrar.", "Use blocos à prova de fogo e funil de queda/água não funciona no Nether.", "Crie ponto de dano seguro para finalizar blazes."],
+        ["Leve Resistência ao Fogo.", "Spawner facilita muito o abastecimento de suporte de poções.", "Boa XP antes do End."],
+        "Blaze voa e atira. Um buraco mal fechado vira incêndio e morte rápida."),
+      farm("bone_meal", "Farm de farinha de osso/alga", ["inicio", "redstone"], "Média", "Fácil a média", "Farinha de osso, alga seca e combustível",
+        [["Bone meal alga Bedrock 1.21", "https://www.youtube.com/watch?v=uhk_UcqIl0w"], ["Bone meal alga e combustível", "https://www.youtube.com/watch?v=xgggm2AOAWQ"]],
+        "Farinha de osso acelera madeira, plantações, flores, musgo e farms. Alga também vira combustível.",
+        ["Use crescimento de alga com pistão/observador ou compostagem automática.", "Direcione itens para composteiras e funis.", "Armazene excesso para árvores e decoração."],
+        ["Boa para automatizar madeira e plantações.", "Rendimento depende do tick/growth do design.", "Também ajuda a farmar corantes via flores."],
+        "Alguns designs antigos quebram com update. Prefira vídeo recente para Bedrock."),
+      farm("trident", "Farm de afogado/tridente", ["xp", "endgame"], "Média", "Média", "Tridente, cobre, conchas, ouro e XP",
+        [["Tridente e XP Bedrock", "https://www.youtube.com/watch?v=k_mrmByOT-4"], ["Afogado 1.21", "https://www.youtube.com/watch?v=3YQ7zJ730CI"]],
+        "Resolve tridente para Correnteza/Lealdade e ainda rende itens de drowned.",
+        ["Use oceano/rio e controle spawn de drowned.", "Direcione mobs para ponto de morte pelo jogador se quiser melhorar drops.", "Ilumine áreas concorrentes."],
+        ["Pilhagem ajuda muito se o método permite matar manualmente.", "Tridente é drop raro, então tenha paciência.", "Boa depois de ter Respiração Aquática."],
+        "Nem todo drowned dropa tridente; só os que podem carregar/gerar com ele têm chance relevante.")
+    ];
+
+    function material(name, categories, priority, best, alternatives, why, when, blockers, farms) {
+      return { name, categories, priority, best, alternatives, why, when, blockers, farms };
+    }
+
+    const materialFarmGuide = [
+      material("Ferro", ["minerio", "redstone"], "Muito alta", "Farm de ferro", "Mineração em Y 16/64, loot de estruturas, troca com villagers.", "É o gargalo de funis, trilhos, bigornas, baldes e mecanismos.", "Faça assim que tiver villagers e cama sobrando.", "Centro de vila misturado e villagers sem acessar estação.", ["iron"]),
+      material("XP", ["xp"], "Muito alta", "Farm de XP dedicada", "Blaze, Enderman, guardian, ouro, spawner e raid.", "Sem XP você não mantém Remendo nem fecha encantamentos.", "Faça uma simples cedo e uma forte depois do End.", "Mob cap, distância AFK errada e coleta entupida.", ["xp", "blaze", "guardian", "gold"]),
+      material("Esmeraldas", ["comida", "villager"], "Muito alta", "Farm de abóbora/melancia + farmers", "Raid farm, cana/papel, ferro com toolsmith/armorer, gravetos com fletcher.", "Compra livros, ferramentas, armaduras e blocos.", "Monte junto com trading hall.", "Villagers sem restock ou preços altos por demanda.", ["pumpkin_melon", "raid", "sugar_bamboo", "iron"]),
+      material("Pólvora", ["redstone", "nether"], "Alta", "Farm de creeper", "Bruxas, ghasts e loot, mas em escala menor.", "Foguetes para Elytra, TNT e poções splash.", "Obrigatória depois da Elytra.", "Spawn-proof ruim e mobs errados nas plataformas.", ["creeper"]),
+      material("Ouro", ["nether", "xp"], "Alta", "Farm de ouro", "Mineração no Nether, bastiões e zombified piglins manuais.", "Bartering, maçã dourada, trilho energizado e cura de villager.", "Faça depois de armadura boa e acesso seguro ao Nether.", "Spawn concorrente e armazenamento sem filtro.", ["gold"]),
+      material("Villagers", ["comida", "villager"], "Muito alta", "Breeder de villagers", "Transportar de vilas próximas.", "Base para livro, ferro, esmeralda, farms e reposição.", "Faça antes do trading hall grande.", "Camas/estações misturadas e zumbis matando villagers.", ["villager"]),
+      material("Papel", ["comida", "villager"], "Alta", "Farm de cana", "Explorar cana manual em rios.", "Librarians/cartógrafos, mapas e foguetes.", "Faça pequena no começo e expanda depois.", "Cana sem água lateral ou coleta perdendo item.", ["sugar_bamboo"]),
+      material("Bambu", ["construcao", "redstone"], "Média", "Farm de bambu automática", "Cortar bambuzal manual.", "Andaime, combustível e crafting de blocos de bambu.", "Boa assim que achar bambu/jungle.", "Coleta sem funil/carrinho deixa item preso.", ["sugar_bamboo"]),
+      material("Slimeball", ["redstone"], "Média", "Farm de slime chunk ou pântano", "Matar slime manual em pântano à noite.", "Pistão grudento, bloco de slime e leads.", "Faça quando começar redstone séria.", "Chunk errado, cavernas escuras e plataformas baixas mal iluminadas.", ["slime"]),
+      material("Blaze rods", ["nether", "xp"], "Alta", "Farm de blaze em spawner", "Matar blaze manual na fortaleza.", "Poções, pó de blaze e olhos do End.", "Assim que achar fortaleza do Nether.", "Falta de resistência ao fogo e spawner mal isolado.", ["blaze"]),
+      material("Prismarinho e lanternas do mar", ["construcao", "xp"], "Média", "Farm de guardian", "Minerar monumento depois de limpar elder guardians.", "Blocos de construção raros e iluminação bonita.", "Midgame/endgame, quando quiser base grande.", "Mining Fatigue e monumento sem controle de spawn.", ["guardian"]),
+      material("Farinha de osso", ["comida", "redstone"], "Média", "Farm de alga/composteira", "Esqueletos, mob farm e compostagem manual.", "Acelera árvores, colheitas, flores, musgo e decoração.", "Boa antes de farms de madeira/flor.", "Design antigo quebrado ou composteiras sem fluxo de item.", ["bone_meal"]),
+      material("Totem", ["villager", "endgame"], "Alta", "Farm de raid", "Matar evocadores em mansões/raids manuais.", "Segurança extrema para Nether, End e Warden.", "Depois de equipamento decente.", "Villager morto e raid spawnando fora do funil.", ["raid"]),
+      material("Tridente", ["xp", "exploracao"], "Média", "Farm de afogado/tridente", "Caçar drowned manualmente em rios/oceanos.", "Correnteza, Lealdade, Canalização e mobilidade na chuva.", "Quando quiser explorar oceanos ou usar Elytra com chuva.", "Drop raro e morte sem Pilhagem.", ["trident"]),
+      material("Comida boa", ["comida"], "Alta", "Farmer + plantação ou butcher", "Farm manual de vaca/porco/frango e plantações.", "Saturação estável evita morte boba em exploração.", "Desde o primeiro dia.", "Sem villager/farm animal protegida.", ["pumpkin_melon", "villager"])
+    ];
+
+    function redstoneComponent(name, categories, role, recipe, use, details, farmUses, mistakes) {
+      return { name, categories, role, recipe, use, details, farmUses, mistakes };
+    }
+
+    function redstoneSystem(name, categories, purpose, layout, key, steps, uses, tuning, mistakes) {
+      return { name, categories, purpose, layout, key, steps, uses, tuning, mistakes };
+    }
+
+    const redstoneComponents = [
+      redstoneComponent("Pó de redstone", ["sinal"], "Fio básico", "Redstone dust minerado ou dropado por bruxas.", "Leva sinal pelo chão e conecta componentes.", "A força começa em 15 e cai 1 por bloco percorrido. Depois de 15 blocos, o sinal morre se você não usar repetidor. O pó também muda formato conforme conexões ao lado.", "Liga pistões, lâmpadas, trilhos energizados, dispensers, portas e módulos de farm.", "Esquecer o limite de 15 blocos ou deixar o fio conectar em lugar indesejado."),
+      redstoneComponent("Tocha de redstone", ["sinal"], "Inversor e fonte fraca", "Graveto + pó de redstone.", "Mantém sinal ligado e desliga quando o bloco onde está presa recebe energia.", "É o NOT gate do Minecraft: entrada ligada vira saída desligada. Também alimenta pó e componentes próximos. Pode queimar se ficar piscando rápido demais.", "Portas invertidas, item sorter, travas, alternadores e sinais que precisam começar ligados.", "Colocar em clock rápido sem controle e causar burnout da tocha."),
+      redstoneComponent("Repetidor", ["sinal", "tempo"], "Reforço, atraso e direção", "Pedra + 2 tochas de redstone + pó.", "Renova sinal para 15, força direção e adiciona delay.", "Tem 4 ajustes de atraso. Também pode travar outro repetidor pela lateral, criando memória/trava simples.", "Linhas longas, clocks, delay de pistões, sequência de dispensers e sincronização de farms.", "Esquecer que ele só conduz para frente; se estiver virado errado, nada passa."),
+      redstoneComponent("Comparador", ["sinal", "itens"], "Leitor e comparador de sinal", "Pedra + 3 tochas de redstone + quartzo do Nether.", "Lê quantidade de itens em containers e compara/subtrai sinais.", "Atrás recebe entrada principal. Laterais podem comparar ou subtrair. Lendo baú, funil, barril, composteira ou suporte de poções, gera sinal proporcional ao conteúdo.", "Item sorter, detector de baú cheio, composteira automática, clock de hopper, leitor de forno e dropper automático.", "Confundir modo comparação com subtração; a luz frontal indica modo subtração."),
+      redstoneComponent("Observador", ["tempo", "farm"], "Sensor de atualização", "Pedregulho + redstone + quartzo do Nether.", "Detecta mudança no bloco observado e solta pulso curto atrás.", "O rosto observa; o ponto vermelho solta o sinal. Ele detecta crescimento de cana/bambu, mudança de trilho, bloco colocado/removido e várias atualizações.", "Farms de cana, bambu, abóbora, melancia, kelp, clocks compactos e detectores de crescimento.", "Virar o observador ao contrário. O lado com rosto precisa olhar o bloco monitorado."),
+      redstoneComponent("Pistão", ["farm"], "Empurrador", "Tábuas + pedregulho + ferro + redstone.", "Empurra bloco ou entidade em linha reta.", "Empurra até 12 blocos se todos forem móveis. Não puxa de volta. Alguns blocos são imóveis, como obsidiana, baú em muitas situações, spawner e bedrock.", "Colhe cana, bambu, melancia, abóbora, empurra mobs, abre portas ocultas e controla água/lava indiretamente.", "Tentar empurrar mais de 12 blocos ou bloco imóvel."),
+      redstoneComponent("Pistão grudento", ["farm"], "Empurra e puxa", "Pistão + slimeball.", "Empurra e puxa o bloco grudado na frente.", "É base de portas, travas e máquinas compactas. Não puxa todos os blocos em qualquer situação, mas é o pistão principal para mecanismos reversíveis.", "Portas de farm, travas de água, elevadores pequenos e alternadores.", "Achar que ele puxa cadeia inteira de blocos; normalmente puxa só o bloco na frente."),
+      redstoneComponent("Dispenser", ["farm", "itens"], "Usa itens", "Pedregulho + arco + redstone.", "Ativa o item dentro: joga água/lava, dispara flecha, equipa armadura, usa bone meal, coloca barco/minecart.", "Diferente do dropper, o dispenser executa ação do item. Com balde de água, alterna colocar e recolher água a cada pulso.", "Lavadores de mob, farms com água temporizada, farms de crop com bone meal, defesa com flechas e portais.", "Usar dropper quando precisava de dispenser; o dropper só cospe item."),
+      redstoneComponent("Dropper", ["itens"], "Cospe item", "Pedregulho + redstone.", "Move ou solta item sem usar a ação especial.", "Se apontado para container, transfere item para ele. Se apontado para ar, joga item. É usado com clocks para transportar itens verticalmente.", "Elevador de itens, descarte automático, compactadores e saídas de farms.", "Colocar itens que precisavam ser usados, como balde de água, e esperar comportamento de dispenser."),
+      redstoneComponent("Funil", ["itens"], "Coleta e transfere item", "5 ferros + baú.", "Puxa item de cima e empurra para onde aponta.", "Funil tem direção. Ele coleta itens soltos acima, puxa de containers acima e empurra para container apontado. Quando energizado por redstone, trava e para de mover itens.", "Coleta de farm, item sorter, fornos automáticos, trading hall, composteira e descarte.", "Não olhar para onde o funil aponta ou energizar sem querer e travar a linha."),
+      redstoneComponent("Baú e barril", ["itens"], "Armazenamento", "Tábuas; barril usa lajes + tábuas.", "Guardam itens e podem ser lidos por comparador.", "Baú duplo guarda mais, barril abre com bloco em cima e é estação de pescador. Ambos podem emitir sinal por comparador conforme enchimento.", "Buffer de farms, saída de sorter, input de forno automático e detector de cheio.", "Deixar saída sem expansão e a farm entupir quando os baús enchem."),
+      redstoneComponent("Trilho energizado", ["itens"], "Movimento de minecart", "Ouro + gravetos + redstone.", "Acelera ou freia minecarts.", "Quando energizado, empurra/acelera carrinhos. Desligado, freia. É usado para coleta com minecart com funil.", "Coleta sob plantação, melancia/abóbora, bambu, forno automático e descarregador.", "Poucos trilhos energizados em subida fazem o carrinho parar."),
+      redstoneComponent("Carrinho com funil", ["itens"], "Coleta móvel", "Minecart + funil.", "Coleta itens através de blocos finos ou acima do trilho.", "Puxa itens rapidamente e pode coletar de blocos acima, dependendo do setup. Excelente quando água não alcança ou itens ficam espalhados.", "Farms de abóbora/melancia, bambu, cana, fungo, cactus e coletores sob bloco.", "Esquecer de descarregar o carrinho; ele enche e para de coletar."),
+      redstoneComponent("Alavanca, botão e placa de pressão", ["sinal"], "Entradas manuais", "Receitas simples de pedra/madeira.", "Geram sinal sob controle do jogador ou entidade.", "Alavanca mantém ligado/desligado. Botão gera pulso. Placa ativa com jogador/mob/item dependendo do tipo.", "Liga farms, ativa flushers, portas, modo manutenção e testes.", "Usar botão onde precisa sinal contínuo, ou alavanca onde precisava só de pulso."),
+      redstoneComponent("Bloco alvo", ["sinal"], "Entrada por projétil", "Fardo de feno + redstone.", "Emite sinal quando acertado por flecha, tridente ou projétil.", "Quanto mais central o acerto, maior a força do sinal. É bom para painéis, minigames e ativações à distância.", "Ativação remota de portas, testes de circuitos e farms manuais com arco.", "Esperar força 15 sempre; depende da precisão do acerto."),
+      redstoneComponent("Sensor de luz solar", ["sinal", "tempo"], "Sensor de dia/noite", "Vidro + quartzo + laje de madeira.", "Emite sinal conforme luz do dia; pode inverter para noite.", "Clicando nele alterna modo normal/invertido. Útil para automatizar iluminação e sistemas que só rodam de dia/noite.", "Luzes automáticas, farms que desligam de dia/noite e alertas.", "Colocar coberto por bloco reduz leitura e bagunça o horário."),
+      redstoneComponent("Sensor sculk", ["sinal"], "Sensor de vibração", "Encontrado no Deep Dark/Ancient City.", "Detecta passos, blocos, projéteis e ações como vibrações.", "Pode acionar redstone sem fio por vibração, mas é sensível a barulho. Lã bloqueia vibração e ajuda a filtrar.", "Portas secretas, alarmes, ativação sem fio e farms experimentais.", "Deixar perto de barulho constante e gerar falsos positivos."),
+      redstoneComponent("Composteira", ["itens"], "Transforma orgânico em farinha de osso", "Lajes de madeira.", "Recebe itens compostáveis e enche camadas até gerar bone meal.", "Funis podem alimentar por cima e retirar bone meal por baixo. Comparador lê o nível de enchimento.", "Farms de alga, sementes, musgo e excesso de plantação.", "Usar item com baixa chance sem volume suficiente e achar que está quebrado."),
+      redstoneComponent("Caldeirão", ["sinal"], "Container de nível", "7 lingotes de ferro.", "Pode armazenar água, lava ou neve em níveis; comparador lê o nível.", "Útil como medidor simples ou parte de circuitos decorativos. Em farms, aparece menos, mas ajuda em lógica de nível.", "Indicadores, sistemas compactos e testes.", "Achar que funciona como baú; ele não armazena item comum."),
+      redstoneComponent("Lâmpada de redstone", ["sinal"], "Indicador visual", "Glowstone + redstone.", "Acende quando energizada.", "Não é só decoração: é excelente para depurar circuito e saber se uma linha está ligada.", "Painéis de status, alertas de baú cheio e debug de farms.", "Tirar indicadores cedo demais e depois não saber onde a farm parou.")
+    ];
+
+    const redstoneSystems = [
+      redstoneSystem("Módulo observador + pistão para cana/bambu", ["sistemas", "farm"], "Colhe automaticamente quando a planta cresce até o observador.",
+        ["[O] observa topo", "[P] pistão quebra o bloco", "[R] redstone atrás liga o pistão", "água/funil coleta embaixo"],
+        "O=observador, P=pistão, R=pó, C=cana/bambu",
+        ["Plante cana ao lado da água ou bambu no bloco válido.", "Coloque pistão mirando o segundo bloco da planta.", "Coloque observador olhando para a altura que você quer detectar.", "Leve o pulso do observador para o pistão.", "Colete com água, funil ou carrinho com funil."],
+        "Cana, bambu, cactus adaptado, kelp em variantes e farms modulares de início.",
+        "Se quiser menos lag, use módulos menores ou linhas com observador só em alguns pontos.",
+        "Observador virado errado e pistão quebrando o caule/base da planta."),
+      redstoneSystem("Filtro de item simples com funil", ["sistemas", "itens"], "Separa um item específico e manda o resto continuar.",
+        ["Baú entrada -> funil superior", "Comparador lê funil filtro", "Tocha trava/destrava funil de saída", "Baú final recebe item filtrado"],
+        "Use 41 itens alvo + 4 fillers renomeados no funil filtro.",
+        ["Coloque funil filtro apontando para o lado, não para baixo.", "Dentro dele, use o item que quer filtrar e itens filler que nunca entram na farm.", "Comparador lê o funil.", "Quando entra item suficiente, a tocha destrava o funil de baixo.", "O item alvo desce para o baú filtrado."],
+        "Separar ferro/papoula, pólvora/outros drops, ouro/carne/espadas e saídas de mob farm.",
+        "Filler renomeado evita item comum ocupar slot errado. Faça um slice por item filtrado.",
+        "Apontar o funil filtro para baixo quebra o filtro porque ele esvazia sem controle."),
+      redstoneSystem("Dropper automático", ["sistemas", "itens", "tempo"], "Dispara itens de um dropper sempre que há item dentro.",
+        ["Comparador atrás do dropper", "Repetidor retorna pulso", "Pó alimenta o dropper", "Saída para água/lava/cactus"],
+        "D=dropper, C=comparador, R=repetidor",
+        ["Coloque comparador lendo o dropper.", "Leve o sinal para repetidor/pó voltando ao dropper.", "Quando item entra, comparador liga e gera pulsos.", "O dropper cospe item até esvaziar."],
+        "Descarte de lixo, elevador de itens e compactação de drops.",
+        "Para descarte, aponte para lava/cactus/fogo com segurança. Para transporte, aponte para outro dropper ou água.",
+        "Sem clock, o dropper cospe só uma vez ou fica parado com itens dentro."),
+      redstoneSystem("Clock de observadores frente a frente", ["sistemas", "tempo"], "Gera pulso rápido e compacto.",
+        ["ROSTO  |  FUNDO", "OBS A  ->  OBS B", "FUNDO  |  ROSTO", "saída: ponto vermelho de qualquer observador"],
+        "Os rostos ficam se observando; o ponto vermelho é a saída do pulso.",
+        ["Coloque o primeiro observador olhando para o espaço onde ficará o segundo.", "Coloque o segundo observador olhando de volta para o primeiro.", "Pegue a saída no ponto vermelho de um deles com pó/repetidor.", "Use para pulsos rápidos em dropper/dispenser.", "Adicione uma trava/desligamento se ficar permanente."],
+        "Dropper rápido, dispenser repetitivo e testes compactos.",
+        "Use com cuidado em Realm; clock rápido permanente pode pesar.",
+        "Deixar clock rodando sem necessidade em chunk carregado."),
+      redstoneSystem("Clock de funil", ["sistemas", "tempo", "itens"], "Cria temporizador ajustável e estável.",
+        ["Funil A <-> Funil B", "Comparadores lendo lados", "Pistões/tochas travam alternância", "Itens dentro definem tempo"],
+        "Mais itens = intervalo maior.",
+        ["Coloque dois funis apontando um para o outro.", "Itens ficam passando de um lado para o outro.", "Comparadores detectam qual lado tem item.", "Pistões ou tochas alternam o estado.", "Use a saída para ligar água, luz, pistões ou dispensers."],
+        "Flush de mob farm, temporizador de crop, relógio de forno e ciclos longos.",
+        "Ajuste tempo pela quantidade de itens nos funis.",
+        "Colocar item empilhável demais sem calcular pode deixar ciclo longo demais."),
+      redstoneSystem("Pulso curto com observador", ["sistemas", "tempo", "sinal"], "Transforma mudança de bloco em pulso único.",
+        ["Bloco muda -> Observador", "Observador -> pó/repetidor", "Pulso ativa pistão/dispenser"],
+        "Bom quando você não quer sinal contínuo.",
+        ["Faça o observador olhar o bloco que muda.", "Pegue sinal no lado vermelho.", "Se precisar alongar, passe por repetidor ou pulse extender.", "Use para ativar só uma vez por crescimento/abertura."],
+        "Cana, bambu, porta automática, dispensers de água e detectores de baú mudando.",
+        "Atraso com repetidor ajuda quando pistão precisa esperar água/item cair.",
+        "Observador detecta várias mudanças e pode disparar mais vezes que o esperado."),
+      redstoneSystem("Extensor de pulso com comparador", ["sistemas", "tempo"], "Faz um botão/pulso durar mais tempo.",
+        ["Entrada -> comparador loop", "pó em volta decai devagar", "saída fica ligada por alguns segundos"],
+        "Útil para água ficar aberta tempo suficiente.",
+        ["Monte um loop de comparadores e pó.", "Mande um pulso de botão/observador.", "O sinal circula e enfraquece aos poucos.", "Pegue a saída enquanto houver força."],
+        "Portas, flushers de água, dispenser de lava temporizado e farms de mobs.",
+        "Mais pó/comparadores aumenta duração; menos deixa mais curto.",
+        "Se o loop se realimentar forte demais, pode não desligar."),
+      redstoneSystem("Monostável simples", ["sistemas", "tempo", "sinal"], "Transforma sinal longo em pulso curto.",
+        ["Botão/alavanca -> circuito", "saída: só um clique rápido", "bom para pistão/dispenser"],
+        "Serve para evitar ativação dupla.",
+        ["Use repetidor/tocha/observador para detectar borda do sinal.", "A saída deve piscar uma vez mesmo se entrada ficar ligada.", "Teste com lâmpada antes de ligar em dispenser."],
+        "Portas de pistão, dispensers de água/lava, contadores e máquinas que quebram com sinal contínuo.",
+        "Em Bedrock, teste timings localmente porque ticks podem variar um pouco entre designs.",
+        "Usar sinal contínuo em dispenser de balde pode colocar e recolher água fora de hora."),
+      redstoneSystem("Dispenser de água liga/desliga", ["sistemas", "farm"], "Solta água para empurrar mobs/itens e recolhe depois.",
+        ["Dispenser com balde de água", "Pulso 1 coloca água", "Pulso 2 recolhe água", "Timer controla intervalo"],
+        "Precisa de número par de pulsos para voltar ao estado inicial.",
+        ["Coloque balde de água no dispenser.", "Aponte para canal/plataforma.", "Use botão, clock ou hopper timer.", "Garanta que o segundo pulso recolha a água.", "Conduza mobs/itens para queda ou funis."],
+        "Mob farms, crop farms, farms de fungo, flushing de plataformas e limpeza de itens.",
+        "Use repetidores para sincronizar várias linhas de dispenser.",
+        "Se der pulso ímpar, a água fica aberta e pode inundar a farm."),
+      redstoneSystem("Coleta com água e funis", ["sistemas", "itens", "farm"], "Leva drops para um ponto central barato.",
+        ["água empurra 8 blocos", "placas/alçapões seguram água", "funis no final", "baú recebe tudo"],
+        "Água normal empurra até 8 blocos em linha.",
+        ["Incline canais para o funil final.", "Use placas, botões ou alçapões para segurar água onde precisa.", "No fim, coloque funis apontando para baú.", "Faça teste jogando item no ponto mais distante."],
+        "Mob farm, iron farm, crop manual, guardian simples e coleta de drops gerais.",
+        "Canais em escadinha aumentam distância sem redstone.",
+        "Item parar na borda por corrente mal alinhada."),
+      redstoneSystem("Coleta com carrinho de funil", ["sistemas", "itens", "farm"], "Coleta itens em área grande sem água.",
+        ["trilho em loop", "carrinho com funil", "descarregador com funil embaixo", "baú final"],
+        "Bom para itens que caem sobre terra/farmland.",
+        ["Faça trilho passar sob blocos onde itens caem.", "Coloque carrinho com funil rodando em loop.", "No ponto de descarga, pare ou desacelere sobre funil.", "Funil descarrega para baú/sorter."],
+        "Abóbora, melancia, bambu, cana, cactus, farms de árvore pequenas.",
+        "Trilho energizado mantém movimento; detector rail pode acionar descarga.",
+        "Carrinho cheio sem descarregar reduz coleta até entupir."),
+      redstoneSystem("Forno automático simples", ["sistemas", "itens"], "Alimenta item, combustível e saída sem ficar clicando.",
+        ["Funil de cima = item", "Funil lateral = combustível", "Funil embaixo = saída", "baús em cada funil"],
+        "Serve para comida, minério e alga.",
+        ["Baú de cima manda itens para o forno.", "Baú lateral manda combustível.", "Funil embaixo retira resultado.", "Baú final guarda produtos.", "Use vários fornos em paralelo para super smelter."],
+        "Cozinhar comida, vidro, pedra lisa, minérios antigos e alga seca.",
+        "Mais fornos = mais velocidade, mas exige dividir itens e combustível.",
+        "Funil lateral errado pode tentar colocar combustível no slot incorreto se apontado mal."),
+      redstoneSystem("Composteira automática", ["sistemas", "itens", "farm"], "Transforma excesso orgânico em farinha de osso.",
+        ["Baú -> funil -> composteira", "funil embaixo -> baú", "opcional: comparador indicador"],
+        "Itens compostáveis entram por cima; bone meal sai por baixo.",
+        ["Coloque funil em cima da composteira.", "Ligue baú de entrada ao funil.", "Coloque funil embaixo puxando bone meal.", "Mande sementes, alga, musgo ou excedente de farm."],
+        "Bone meal para árvores, flores, musgo, crops e decoração.",
+        "Use itens de alta compostagem se quiser mais rendimento.",
+        "Nem todo item orgânico composta; confira se o item realmente entra."),
+      redstoneSystem("Alarme de baú cheio", ["sistemas", "itens", "sinal"], "Mostra quando armazenamento da farm está lotando.",
+        ["Comparador lendo baú", "pó/repetidor", "lâmpada ou sino", "opcional: inverter com tocha"],
+        "Quanto mais cheio, mais forte o sinal.",
+        ["Coloque comparador atrás do baú/barril.", "Leve sinal para lâmpada de redstone.", "Se quiser só acender quando quase cheio, use distância de pó para exigir sinal alto.", "Opcional: ligue sino/dropper para aviso."],
+        "Saída de iron farm, mob farm, sorter e storage.",
+        "A distância do pó funciona como limite: sinal fraco morre antes.",
+        "Baú duplo muda escala de sinal; teste antes de esconder."),
+      redstoneSystem("Trava de manutenção", ["sistemas", "sinal"], "Desliga uma farm para consertar sem quebrar tudo.",
+        ["Alavanca -> linha principal", "tocha inverte se necessário", "pistões/dispensers/funis recebem bloqueio"],
+        "Toda farm boa merece botão de desligar.",
+        ["Escolha o que precisa parar: clock, água, funis ou spawn.", "Coloque uma alavanca acessível.", "Use tocha se precisar inverter o comportamento.", "Marque visualmente ligado/desligado com lâmpada."],
+        "Farms de mob, item sorter, dropper clock, sugar cane e sistemas com lava.",
+        "Desligar clocks rápidos quando sair da área ajuda performance.",
+        "Desligar só metade do sistema pode acumular item/mob em lugar perigoso."),
+      redstoneSystem("Linha de repetidores para sequência", ["sistemas", "tempo", "sinal"], "Ativa vários pistões/dispensers em ordem.",
+        ["Entrada -> R1 -> R2 -> R3", "cada R tem atraso", "saídas laterais ativam módulos"],
+        "R=repetidor; aumente ticks para atrasar.",
+        ["Passe sinal por repetidores em linha.", "Ajuste cada repetidor para o delay desejado.", "Pegue saídas em pontos diferentes.", "Use para abrir água, depois pistão, depois coleta."],
+        "Portas, flushers grandes, farms de fungo/árvore e módulos que precisam ordem.",
+        "Comece com atrasos maiores e reduza depois de testar.",
+        "Sequência rápida demais pode deixar pistão sem tempo de empurrar.")
     ];
 
     const structureAtlas = [
@@ -7317,6 +7789,29 @@
     const villagerOverview = document.querySelector("#villagerOverview");
     const villagerGrid = document.querySelector("#villagerGrid");
     const villagerEmpty = document.querySelector("#villagerEmpty");
+    const potionCategory = document.querySelector("#potionCategory");
+    const potionSearch = document.querySelector("#potionSearch");
+    const potionOverview = document.querySelector("#potionOverview");
+    const potionGrid = document.querySelector("#potionGrid");
+    const potionEmpty = document.querySelector("#potionEmpty");
+    const farmCategory = document.querySelector("#farmCategory");
+    const farmSearch = document.querySelector("#farmSearch");
+    const farmOverview = document.querySelector("#farmOverview");
+    const farmGrid = document.querySelector("#farmGrid");
+    const farmEmpty = document.querySelector("#farmEmpty");
+    const materialCategory = document.querySelector("#materialCategory");
+    const materialSearch = document.querySelector("#materialSearch");
+    const materialOverview = document.querySelector("#materialOverview");
+    const materialGrid = document.querySelector("#materialGrid");
+    const materialEmpty = document.querySelector("#materialEmpty");
+    const redstoneCategory = document.querySelector("#redstoneCategory");
+    const redstoneSearch = document.querySelector("#redstoneSearch");
+    const redstoneOverview = document.querySelector("#redstoneOverview");
+    const redstoneComponentGrid = document.querySelector("#redstoneComponentGrid");
+    const redstoneSystemGrid = document.querySelector("#redstoneSystemGrid");
+    const redstoneComponentsPanel = document.querySelector("#redstoneComponentsPanel");
+    const redstoneSystemsPanel = document.querySelector("#redstoneSystemsPanel");
+    const redstoneEmpty = document.querySelector("#redstoneEmpty");
 
     function setupSelect() {
       ores.forEach(ore => {
@@ -7519,6 +8014,273 @@
           ${trade.note ? `<span class="trade-note">${trade.note}</span>` : ""}
         </div>
       `;
+    }
+
+    function renderPotions() {
+      const category = potionCategory.value;
+      const query = normalizeText(potionSearch.value);
+      const visible = potionGuide.filter(item => {
+        const haystack = normalizeText([item.name, item.base, item.ingredient, item.upgrades, item.use, item.details, item.cautions, item.categories.join(" ")].join(" "));
+        return (category === "all" || item.categories.includes(category)) && (!query || haystack.includes(query));
+      });
+      renderPotionOverview(visible);
+      potionGrid.innerHTML = visible.map(potionCard).join("");
+      potionEmpty.classList.toggle("hidden", visible.length > 0);
+    }
+
+    function renderPotionOverview(visible) {
+      const combat = visible.filter(item => item.categories.includes("combate")).length;
+      const exploration = visible.filter(item => item.categories.includes("exploracao")).length;
+      const negative = visible.filter(item => item.categories.includes("negativa")).length;
+      potionOverview.innerHTML = [
+        ["Poções no filtro", visible.length],
+        ["Combate", combat],
+        ["Exploração", exploration],
+        ["Negativas", negative]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function potionCard(item) {
+      return `
+        <article class="info-card">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>${item.use}</small>
+            </div>
+            <span class="info-pill">${item.categories.join(", ")}</span>
+          </div>
+          <div class="compact-stats">
+            <span>Base <b>${item.base}</b></span>
+            <span>Ingrediente <b>${item.ingredient}</b></span>
+            <span>Melhorias <b>${item.upgrades}</b></span>
+          </div>
+          <p class="info-summary"><b>Como funciona:</b> ${item.details}</p>
+          <p class="info-summary"><b>Cuidado:</b> ${item.cautions}</p>
+        </article>
+      `;
+    }
+
+    function renderImportantFarms() {
+      const category = farmCategory.value;
+      const query = normalizeText(farmSearch.value);
+      const visible = importantFarms.filter(item => {
+        const haystack = normalizeText([
+          item.id,
+          item.name,
+          item.priority,
+          item.difficulty,
+          item.output,
+          item.summary,
+          item.warnings,
+          item.categories.join(" "),
+          ...item.build,
+          ...item.tips,
+          ...item.video.flat()
+        ].join(" "));
+        return (category === "all" || item.categories.includes(category)) && (!query || haystack.includes(query));
+      });
+      renderFarmOverview(visible);
+      farmGrid.innerHTML = visible.map(farmCard).join("");
+      farmEmpty.classList.toggle("hidden", visible.length > 0);
+    }
+
+    function renderFarmOverview(visible) {
+      const top = visible.filter(item => item.priority.includes("Muito")).length;
+      const xp = visible.filter(item => item.categories.includes("xp")).length;
+      const villager = visible.filter(item => item.categories.includes("villager")).length;
+      farmOverview.innerHTML = [
+        ["Farms no filtro", visible.length],
+        ["Prioridade muito alta", top],
+        ["Também rendem XP", xp],
+        ["Ligadas a villager", villager]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function farmCard(item) {
+      return `
+        <article class="info-card trade">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>Rende: ${item.output}</small>
+            </div>
+            <span class="info-pill">${item.priority}</span>
+          </div>
+          <p class="info-summary">${item.summary}</p>
+          <div class="compact-stats">
+            <span>Dificuldade <b>${item.difficulty}</b></span>
+            <span>Categoria <b>${item.categories.join(", ")}</b></span>
+            <span>Uso principal <b>${item.output}</b></span>
+          </div>
+          <ul class="detail-list">
+            <li><b>Como construir:</b> ${item.build.join(" ")}</li>
+            <li><b>Dicas de rendimento:</b> ${item.tips.join(" ")}</li>
+            <li><b>Risco/cuidado:</b> ${item.warnings}</li>
+          </ul>
+          <div class="resource-links">
+            ${item.video.map(([label, url]) => `<a href="${url}" target="_blank" rel="noreferrer">${label}</a>`).join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderMaterialFarms() {
+      const category = materialCategory.value;
+      const query = normalizeText(materialSearch.value);
+      const visible = materialFarmGuide.filter(item => {
+        const farmNames = item.farms.map(id => importantFarms.find(farm => farm.id === id)?.name || id);
+        const haystack = normalizeText([item.name, item.priority, item.best, item.alternatives, item.why, item.when, item.blockers, item.categories.join(" "), ...farmNames].join(" "));
+        return (category === "all" || item.categories.includes(category)) && (!query || haystack.includes(query));
+      });
+      renderMaterialOverview(visible);
+      materialGrid.innerHTML = visible.map(materialCard).join("");
+      materialEmpty.classList.toggle("hidden", visible.length > 0);
+    }
+
+    function renderMaterialOverview(visible) {
+      const high = visible.filter(item => item.priority.includes("Alta")).length;
+      const redstone = visible.filter(item => item.categories.includes("redstone")).length;
+      const xp = visible.filter(item => item.categories.includes("xp")).length;
+      materialOverview.innerHTML = [
+        ["Materiais no filtro", visible.length],
+        ["Alta prioridade", high],
+        ["Técnicos/redstone", redstone],
+        ["Ligados a XP", xp]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function materialCard(item) {
+      const farms = item.farms
+        .map(id => importantFarms.find(farm => farm.id === id))
+        .filter(Boolean);
+      return `
+        <article class="info-card">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>Melhor caminho: ${item.best}</small>
+            </div>
+            <span class="info-pill">${item.priority}</span>
+          </div>
+          <p class="info-summary"><b>Por que importa:</b> ${item.why}</p>
+          <div class="compact-stats">
+            <span>Categoria <b>${item.categories.join(", ")}</b></span>
+            <span>Quando fazer <b>${item.when}</b></span>
+            <span>Alternativas <b>${item.alternatives}</b></span>
+          </div>
+          <div class="guide-note"><b>O que limita:</b> ${item.blockers}</div>
+          <div class="resource-links">
+            ${farms.map(farm => `<a href="#importantFarmsTab" data-open-farm="${farm.id}">${farm.name}</a>`).join("")}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderRedstoneGuide() {
+      const mode = redstoneCategory.value;
+      const query = normalizeText(redstoneSearch.value);
+      const showComponents = mode !== "sistemas";
+      const showSystems = mode !== "componentes";
+      const categoryFilter = ["sinal", "tempo", "itens", "farm"].includes(mode) ? mode : "";
+
+      const visibleComponents = redstoneComponents.filter(item => {
+        const haystack = normalizeText([item.name, item.role, item.recipe, item.use, item.details, item.farmUses, item.mistakes, item.categories.join(" ")].join(" "));
+        return showComponents && (!categoryFilter || item.categories.includes(categoryFilter)) && (!query || haystack.includes(query));
+      });
+
+      const visibleSystems = redstoneSystems.filter(item => {
+        const haystack = normalizeText([item.name, item.purpose, item.key, item.uses, item.tuning, item.mistakes, item.categories.join(" "), ...item.layout, ...item.steps].join(" "));
+        return showSystems && (!categoryFilter || item.categories.includes(categoryFilter)) && (!query || haystack.includes(query));
+      });
+
+      redstoneComponentsPanel.classList.toggle("hidden", !showComponents);
+      redstoneSystemsPanel.classList.toggle("hidden", !showSystems);
+      renderRedstoneOverview(visibleComponents, visibleSystems);
+      redstoneComponentGrid.innerHTML = visibleComponents.map(redstoneComponentCard).join("");
+      redstoneSystemGrid.innerHTML = visibleSystems.map(redstoneSystemCard).join("");
+      redstoneEmpty.classList.toggle("hidden", visibleComponents.length + visibleSystems.length > 0);
+    }
+
+    function renderRedstoneOverview(visibleComponents, visibleSystems) {
+      const itemComponents = visibleComponents.filter(item => item.categories.includes("itens")).length;
+      const timingSystems = visibleSystems.filter(item => item.categories.includes("tempo")).length;
+      redstoneOverview.innerHTML = [
+        ["Componentes no filtro", visibleComponents.length],
+        ["Sisteminhas no filtro", visibleSystems.length],
+        ["Focados em itens", itemComponents],
+        ["Tempo/pulso/clock", timingSystems]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function redstoneComponentCard(item) {
+      return `
+        <article class="info-card">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>${item.role}</small>
+            </div>
+            <span class="info-pill">${item.categories.join(", ")}</span>
+          </div>
+          <div class="compact-stats">
+            <span>Receita/origem <b>${item.recipe}</b></span>
+            <span>Uso direto <b>${item.use}</b></span>
+            <span>Em farms <b>${item.farmUses}</b></span>
+          </div>
+          <p class="info-summary"><b>Como funciona:</b> ${item.details}</p>
+          <div class="guide-note"><b>Erro comum:</b> ${item.mistakes}</div>
+        </article>
+      `;
+    }
+
+    function redstoneSystemCard(item) {
+      return `
+        <article class="info-card trade">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>${item.purpose}</small>
+            </div>
+            <span class="info-pill">${item.categories.join(", ")}</span>
+          </div>
+          <div class="redstone-layout">${escapeHtml(item.layout.join("\n"))}</div>
+          <p class="redstone-key">${item.key}</p>
+          <ul class="detail-list">
+            ${item.steps.map((step, index) => `<li><b>${index + 1}.</b> ${step}</li>`).join("")}
+          </ul>
+          <p class="info-summary"><b>Onde aparece:</b> ${item.uses}</p>
+          <p class="info-summary"><b>Ajuste fino:</b> ${item.tuning}</p>
+          <div class="guide-note"><b>Erro comum:</b> ${item.mistakes}</div>
+        </article>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     }
 
     function renderLocationOverview(visibleBiomes, visibleStructures) {
@@ -8063,6 +8825,24 @@
     enchantmentSearch.addEventListener("input", renderEnchantments);
     villagerProfession.addEventListener("change", renderVillagerTrades);
     villagerSearch.addEventListener("input", renderVillagerTrades);
+    potionCategory.addEventListener("change", renderPotions);
+    potionSearch.addEventListener("input", renderPotions);
+    farmCategory.addEventListener("change", renderImportantFarms);
+    farmSearch.addEventListener("input", renderImportantFarms);
+    materialCategory.addEventListener("change", renderMaterialFarms);
+    materialSearch.addEventListener("input", renderMaterialFarms);
+    redstoneCategory.addEventListener("change", renderRedstoneGuide);
+    redstoneSearch.addEventListener("input", renderRedstoneGuide);
+    materialGrid.addEventListener("click", event => {
+      const link = event.target.closest("[data-open-farm]");
+      if (!link) return;
+      event.preventDefault();
+      document.querySelector('[data-tab-target="importantFarmsTab"]').click();
+      farmCategory.value = "all";
+      farmSearch.value = link.dataset.openFarm;
+      renderImportantFarms();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
     document.querySelector("#enchantmentReset").addEventListener("click", () => {
       enchantmentCategory.value = "all";
       enchantmentSearch.value = "";
@@ -8072,6 +8852,26 @@
       villagerProfession.value = "all";
       villagerSearch.value = "";
       renderVillagerTrades();
+    });
+    document.querySelector("#potionReset").addEventListener("click", () => {
+      potionCategory.value = "all";
+      potionSearch.value = "";
+      renderPotions();
+    });
+    document.querySelector("#farmReset").addEventListener("click", () => {
+      farmCategory.value = "all";
+      farmSearch.value = "";
+      renderImportantFarms();
+    });
+    document.querySelector("#materialReset").addEventListener("click", () => {
+      materialCategory.value = "all";
+      materialSearch.value = "";
+      renderMaterialFarms();
+    });
+    document.querySelector("#redstoneReset").addEventListener("click", () => {
+      redstoneCategory.value = "all";
+      redstoneSearch.value = "";
+      renderRedstoneGuide();
     });
     document.querySelector("#locationReset").addEventListener("click", () => {
       locationMode.value = "all";
@@ -8091,6 +8891,10 @@
     renderLocationAtlas();
     renderEnchantments();
     renderVillagerTrades();
+    renderPotions();
+    renderImportantFarms();
+    renderMaterialFarms();
+    renderRedstoneGuide();
   </script>
 </body>
 </html>
