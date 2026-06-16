@@ -940,6 +940,10 @@
       background: linear-gradient(90deg, var(--emerald), var(--accent));
     }
 
+    .info-card.perfect::before {
+      background: linear-gradient(90deg, var(--lapis), var(--diamond), var(--accent));
+    }
+
     .info-head {
       display: flex;
       align-items: flex-start;
@@ -1015,6 +1019,69 @@
     .trade-row b {
       color: #17202a;
       font-weight: 850;
+    }
+
+    .manual-steps {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: manual-step;
+    }
+
+    .manual-steps li {
+      counter-increment: manual-step;
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      border: 1px solid #dce4ea;
+      border-radius: 7px;
+      background: #f7f9fb;
+      padding: 9px;
+      color: #435166;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .manual-steps li::before {
+      content: counter(manual-step);
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #eef6f5;
+      color: #0f766e;
+      font-weight: 900;
+    }
+
+    .manual-steps b {
+      color: #17202a;
+    }
+
+    .manual-note {
+      border: 1px solid #dce4ea;
+      border-radius: 7px;
+      background: #fbfcfd;
+      padding: 9px;
+      color: #435166;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .manual-note b {
+      color: #17202a;
+    }
+
+    .subhead {
+      margin: 0 0 8px;
+      color: #17202a;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
     }
 
     .trade-level {
@@ -1923,6 +1990,7 @@
       <button class="tab-button active" type="button" data-tab-target="miningTab">Mineração</button>
       <button class="tab-button" type="button" data-tab-target="locationsTab">Biomas e estruturas</button>
       <button class="tab-button" type="button" data-tab-target="enchantmentsTab">Encantamentos</button>
+      <button class="tab-button" type="button" data-tab-target="perfectEnchantmentsTab">Encantamentos perfeitos</button>
       <button class="tab-button" type="button" data-tab-target="villagersTab">Trocas villagers</button>
       <button class="tab-button" type="button" data-tab-target="potionsTab">Poções</button>
       <button class="tab-button" type="button" data-tab-target="importantFarmsTab">Farms importantes</button>
@@ -2044,6 +2112,41 @@
         <div class="panel-body">
           <div class="catalog-grid" id="enchantmentGrid"></div>
           <div class="empty-state hidden" id="enchantmentEmpty">Nenhum encantamento encontrado nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="perfectEnchantmentsTab">
+      <section class="toolbar guide-toolbar" aria-label="Filtros de manuais de encantamento perfeito">
+        <select id="perfectCategory" aria-label="Filtrar manual perfeito">
+          <option value="all">Todos os kits perfeitos</option>
+          <option value="armadura">Armadura</option>
+          <option value="ferramenta">Ferramentas</option>
+          <option value="arma">Armas corpo a corpo</option>
+          <option value="distancia">Arco, besta e tridente</option>
+          <option value="utilidade">Utilidade e especiais</option>
+        </select>
+        <input id="perfectSearch" type="search" placeholder="Buscar item, encantamento ou ordem de bigorna">
+        <button id="perfectReset" type="button">Limpar</button>
+      </section>
+
+      <section class="panel">
+        <h2>Regra para não ficar caro demais</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="perfectOverview"></div>
+          <div class="catalog-grid" id="perfectRules"></div>
+          <p class="hint">
+            Use livros já no nível máximo quando possível. Encantamento vindo da mesa não aumenta usos de bigorna; a bigorna sim.
+            Se um livro ou item já passou muitas vezes pela bigorna, a penalidade fica presa nele até limpar no rebolo.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Manuais por equipamento</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="perfectGrid"></div>
+          <div class="empty-state hidden" id="perfectEmpty">Nenhum manual encontrado nesse filtro.</div>
         </div>
       </section>
     </section>
@@ -2246,6 +2349,13 @@
         label: "Catálogo",
         value: "41 encantamentos",
         meta: "Armadura, armas, ferramentas, tridente, besta, arco e tesouros"
+      },
+      perfectEnchantmentsTab: {
+        title: "Encantamentos perfeitos",
+        subtitle: "Manuais de bigorna para montar kits finais com poucos usos, livros balanceados e menor risco de ficar caro demais.",
+        label: "Regra principal",
+        value: "Combine em pares",
+        meta: "Poucos usos no item; livros grandes antes de aplicar"
       },
       villagersTab: {
         title: "Trocas com villagers",
@@ -4291,6 +4401,249 @@
         "Sem conflito com Densidade/Brecha, mas depende de smash acertado.",
         "Tesouro de ominous vaults/câmaras de teste ominosas.",
         [["Maça", "Cada nível aumenta a força do lançamento para cima após o smash."]])
+    ];
+
+    const anvilRules = [
+      ["Regra de ouro", "Não aplique seis livros um por um no item. Combine livros em pares, depois pares com pares, e só então aplique o livro grande no equipamento."],
+      ["Por que funciona", "Cada uso de bigorna aumenta a penalidade anterior. Quando dois itens são combinados, o resultado herda o maior histórico dos dois lados e soma mais um uso."],
+      ["Use a mesa a seu favor", "Se a mesa de encantamentos der uma base boa no item, use esse item como início. Encantar na mesa não conta como uso de bigorna."],
+      ["Livros no nível máximo", "Sempre que der, compre ou junte livros já no nível máximo antes do plano final. Subir Eficiência IV para V, por exemplo, deve acontecer antes de entrar na árvore principal."],
+      ["Renomear", "Se quiser renomear o item, faça isso junto com uma aplicação importante na bigorna. Renomear sozinho também adiciona uso."],
+      ["Limite prático", "Quando o custo passa do limite da bigorna, o jogo mostra caro demais. O objetivo dos planos abaixo é manter o item final com poucos usos diretos."]
+    ];
+
+    function perfect(id, name, category, ideal, choice, order, avoid, notes) {
+      return { id, name, category, ideal, choice, order, avoid, notes };
+    }
+
+    const perfectEnchantments = [
+      perfect("helmet", "Capacete perfeito", "armadura",
+        ["Proteção IV", "Durabilidade III", "Remendo", "Respiração III", "Afinidade Aquática", "Espinhos III opcional"],
+        "Use Proteção IV como padrão. Troque por Proteção contra Fogo, Explosões ou Projéteis só se quiser um set especializado.",
+        [
+          "Livro A: Proteção IV + Durabilidade III.",
+          "Livro B: Remendo + Respiração III.",
+          "Livro C opcional: Afinidade Aquática + Espinhos III.",
+          "Combine A + B.",
+          "Aplique o livro combinado no capacete.",
+          "Se usar C, aplique por último ou combine C com A+B se o custo permitir."
+        ],
+        "Não misture tipos de proteção. Evite Espinhos se você quer gastar menos durabilidade.",
+        "Capacete costuma ficar caro por ter muitos encantamentos únicos; por isso é melhor juntar livros antes de tocar no item."),
+      perfect("chestplate", "Peitoral perfeito", "armadura",
+        ["Proteção IV", "Durabilidade III", "Remendo", "Espinhos III opcional"],
+        "Peitoral é uma das peças mais simples: poucos livros e custo bem controlado.",
+        [
+          "Livro A: Proteção IV + Durabilidade III.",
+          "Livro B opcional: Remendo + Espinhos III.",
+          "Sem Espinhos: combine Proteção IV + Durabilidade III + Remendo em livro único e aplique.",
+          "Com Espinhos: combine A + B e aplique uma vez no peitoral."
+        ],
+        "Não vale colocar vários tipos de proteção. Espinhos em todas as peças aumenta muito o desgaste do set.",
+        "Se a mesa já deu Proteção IV ou Durabilidade III no peitoral, use isso como base e complete só o que faltar."),
+      perfect("leggings", "Calças perfeitas", "armadura",
+        ["Proteção IV", "Durabilidade III", "Remendo", "Furtividade Veloz III opcional", "Espinhos III opcional"],
+        "Furtividade Veloz é tesouro de Ancient City; deixe entrar como livro alto, não como uma cadeia longa de bigorna.",
+        [
+          "Livro A: Proteção IV + Durabilidade III.",
+          "Livro B: Remendo + Furtividade Veloz III.",
+          "Livro C opcional: Espinhos III.",
+          "Combine A + B.",
+          "Aplique nas calças.",
+          "Se quiser Espinhos, aplique por último."
+        ],
+        "Furtividade Veloz é opcional. Não trave o progresso do set esperando esse livro se você ainda não explorou Ancient City.",
+        "Essas calças são ótimas para exploração perigosa, pontes no End e construção em altura."),
+      perfect("boots", "Botas perfeitas", "armadura",
+        ["Proteção IV", "Queda Suave IV", "Passos Profundos III ou Passos Gelados II", "Velocidade das Almas III opcional", "Durabilidade III", "Remendo", "Espinhos III opcional"],
+        "Passos Profundos é melhor para uso geral. Passos Gelados é alternativo e não combina no mesmo par.",
+        [
+          "Livro A: Proteção IV + Durabilidade III.",
+          "Livro B: Remendo + Queda Suave IV.",
+          "Livro C: Passos Profundos III + Velocidade das Almas III.",
+          "Livro D opcional: Espinhos III.",
+          "Combine A + B.",
+          "Combine C + D se for usar Espinhos; se não, deixe C sozinho.",
+          "Combine o resultado A+B com C.",
+          "Aplique o livro final nas botas."
+        ],
+        "Não junte Passos Profundos e Passos Gelados. Se o custo ficar alto, tire Espinhos primeiro.",
+        "Botas são a peça mais fácil de estourar preço, então livros em pares fazem bastante diferença."),
+      perfect("pickaxe-fortune", "Picareta de Fortuna perfeita", "ferramenta",
+        ["Eficiência V", "Fortuna III", "Durabilidade III", "Remendo"],
+        "Use esta para minérios que dropam item: diamante, carvão, lápis-lazúli, redstone, quartzo e esmeralda.",
+        [
+          "Livro A: Eficiência V + Fortuna III.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Combine A + B.",
+          "Aplique na picareta limpa ou em uma picareta já boa da mesa."
+        ],
+        "Fortuna não combina com Toque Suave.",
+        "Se a mesa der Eficiência IV ou V, use a picareta como base e economize um livro."),
+      perfect("pickaxe-silk", "Picareta de Toque Suave perfeita", "ferramenta",
+        ["Eficiência V", "Toque Suave", "Durabilidade III", "Remendo"],
+        "Use esta para vidro, gelo, minério em bloco, blocos delicados e ardosiabissal com silk.",
+        [
+          "Livro A: Eficiência V + Toque Suave.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Combine A + B.",
+          "Aplique na picareta."
+        ],
+        "Toque Suave não combina com Fortuna.",
+        "Tenha uma picareta de Fortuna e outra de Toque Suave. Tentar transformar uma na outra depois é desperdício."),
+      perfect("shovel", "Pá perfeita", "ferramenta",
+        ["Eficiência V", "Durabilidade III", "Remendo", "Toque Suave ou Fortuna III"],
+        "Toque Suave é bom para grama, micélio e podzol. Fortuna é boa para cascalho quando você quer sílex.",
+        [
+          "Livro A: Eficiência V + Durabilidade III.",
+          "Livro B: Remendo + Toque Suave ou Fortuna III.",
+          "Combine A + B.",
+          "Aplique na pá."
+        ],
+        "Escolha Toque Suave ou Fortuna. Não precisa forçar dois modelos se você quase não usa pá especial.",
+        "Pá é barata de montar, mas Eficiência V pode quebrar blocos rápido demais perto de construções."),
+      perfect("axe", "Machado perfeito", "ferramenta",
+        ["Eficiência V", "Durabilidade III", "Remendo", "Afiação V opcional", "Toque Suave ou Fortuna III opcional"],
+        "Machado de trabalho prioriza Eficiência. Machado de combate pode receber Afiação, mas vale fazer separado.",
+        [
+          "Livro A: Eficiência V + Durabilidade III.",
+          "Livro B: Remendo + Toque Suave ou Fortuna, se quiser utilidade.",
+          "Livro C opcional: Afiação V.",
+          "Combine A + B.",
+          "Aplique no machado.",
+          "Se usar Afiação, aplique por último ou monte um machado separado de combate."
+        ],
+        "Afiação, Julgamento e Ruína dos Artrópodes competem entre si.",
+        "Para cortar madeira, dano não importa. Para PvE, um machado separado evita custo alto desnecessário."),
+      perfect("hoe", "Enxada perfeita", "ferramenta",
+        ["Eficiência V", "Durabilidade III", "Remendo", "Fortuna III ou Toque Suave"],
+        "Ótima para sculk, folhas, musgo, esponja e alguns blocos de farm.",
+        [
+          "Livro A: Eficiência V + Durabilidade III.",
+          "Livro B: Remendo + Fortuna III ou Toque Suave.",
+          "Combine A + B.",
+          "Aplique na enxada."
+        ],
+        "Fortuna e Toque Suave são exclusivos.",
+        "Para folhas e mudas, Fortuna costuma ser melhor. Para sculk/blocos delicados, Toque Suave."),
+      perfect("sword", "Espada perfeita", "arma",
+        ["Afiação V ou Julgamento V", "Pilhagem III", "Durabilidade III", "Remendo", "Aspecto Flamejante II", "Repulsão II opcional"],
+        "Afiação é geral. Julgamento é especializada contra mortos-vivos e Wither.",
+        [
+          "Livro A: Afiação V ou Julgamento V + Pilhagem III.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Livro C: Aspecto Flamejante II + Repulsão II, se quiser Repulsão.",
+          "Combine A + B.",
+          "Combine o resultado com C, ou aplique C por último.",
+          "Aplique o livro final na espada."
+        ],
+        "Afiação, Julgamento e Ruína dos Artrópodes não combinam. Repulsão pode atrapalhar farms manuais.",
+        "Para farm manual, Pilhagem III é prioridade alta. Aspecto Flamejante é gosto pessoal."),
+      perfect("mace", "Maça perfeita", "arma",
+        ["Densidade V ou Brecha IV", "Rajada de Vento III se tiver", "Durabilidade III", "Remendo", "Aspecto Flamejante II opcional"],
+        "Densidade é o padrão PvE para smash. Brecha é mais voltada a alvos com armadura.",
+        [
+          "Livro A: Densidade V ou Brecha IV + Durabilidade III.",
+          "Livro B: Remendo + Rajada de Vento III.",
+          "Livro C opcional: Aspecto Flamejante II.",
+          "Combine A + B.",
+          "Aplique na maça.",
+          "Se usar C, aplique por último."
+        ],
+        "Densidade, Brecha, Afiação, Julgamento e Ruína dos Artrópodes competem no mesmo item.",
+        "Rajada de Vento é rara; monte a maça sem ela e complete depois se encontrar o livro."),
+      perfect("bow-infinity", "Arco perfeito com Infinidade", "distancia",
+        ["Força V", "Infinidade", "Durabilidade III", "Chama", "Impacto II opcional"],
+        "Mais cômodo para exploração: uma flecha normal no inventário já basta.",
+        [
+          "Livro A: Força V + Infinidade.",
+          "Livro B: Durabilidade III + Chama.",
+          "Livro C opcional: Impacto II.",
+          "Combine A + B.",
+          "Aplique no arco.",
+          "Aplique C só se você gosta de empurrão."
+        ],
+        "Infinidade não combina com Remendo.",
+        "Arco com Infinidade não se repara com XP; eventualmente você troca ou repara por bigorna enquanto valer a pena."),
+      perfect("bow-mending", "Arco perfeito com Remendo", "distancia",
+        ["Força V", "Remendo", "Durabilidade III", "Chama", "Impacto II opcional"],
+        "Menos cômodo que Infinidade, mas dura para sempre se você tem XP e flechas.",
+        [
+          "Livro A: Força V + Remendo.",
+          "Livro B: Durabilidade III + Chama.",
+          "Livro C opcional: Impacto II.",
+          "Combine A + B.",
+          "Aplique no arco.",
+          "Aplique C se quiser."
+        ],
+        "Remendo não combina com Infinidade.",
+        "Bom para quem já tem farm de flechas ou usa flechas especiais."),
+      perfect("crossbow", "Besta perfeita", "distancia",
+        ["Carga Rápida III", "Durabilidade III", "Remendo", "Perfuração IV ou Tiro Múltiplo"],
+        "Perfuração é ótima em corredor e ainda recupera flechas. Tiro Múltiplo é melhor para grupos e fogos.",
+        [
+          "Livro A: Carga Rápida III + Durabilidade III.",
+          "Livro B: Remendo + Perfuração IV ou Tiro Múltiplo.",
+          "Combine A + B.",
+          "Aplique na besta."
+        ],
+        "Perfuração e Tiro Múltiplo não combinam.",
+        "Para foguetes, Tiro Múltiplo é mais divertido. Para economia e corredores, Perfuração rende mais."),
+      perfect("trident-loyalty", "Tridente de Lealdade perfeito", "distancia",
+        ["Lealdade III", "Empalamento V", "Canalização", "Durabilidade III", "Remendo"],
+        "Tridente de arremesso que volta para você. No Bedrock, Empalamento é muito forte em água e chuva.",
+        [
+          "Livro A: Lealdade III + Empalamento V.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Livro C: Canalização.",
+          "Combine A + B.",
+          "Aplique no tridente.",
+          "Aplique Canalização por último."
+        ],
+        "Lealdade e Canalização não combinam com Correnteza.",
+        "Faça esse tridente separado do tridente de mobilidade."),
+      perfect("trident-riptide", "Tridente de Correnteza perfeito", "distancia",
+        ["Correnteza III", "Empalamento V", "Durabilidade III", "Remendo"],
+        "Tridente de mobilidade para água ou chuva, excelente com Elytra.",
+        [
+          "Livro A: Correnteza III + Empalamento V.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Combine A + B.",
+          "Aplique no tridente."
+        ],
+        "Correnteza não combina com Lealdade nem Canalização.",
+        "É um item de mobilidade. Para combate à distância, use o modelo de Lealdade."),
+      perfect("fishing", "Vara de pesca perfeita", "utilidade",
+        ["Sorte do Mar III", "Isca III", "Durabilidade III", "Remendo"],
+        "Para pescaria longa, livros, selas, etiquetas e tesouro.",
+        [
+          "Livro A: Sorte do Mar III + Isca III.",
+          "Livro B: Durabilidade III + Remendo.",
+          "Combine A + B.",
+          "Aplique na vara."
+        ],
+        "Sem conflito importante.",
+        "É barata de montar e pode se pagar com a própria pescaria."),
+      perfect("elytra", "Elytra perfeita", "utilidade",
+        ["Durabilidade III", "Remendo"],
+        "Kit obrigatório para voar sem destruir a Elytra.",
+        [
+          "Combine Durabilidade III + Remendo em um livro.",
+          "Aplique na Elytra.",
+          "Se quiser renomear, renomeie nessa mesma operação."
+        ],
+        "Não tem outros encantamentos úteis vanilla.",
+        "Evite reparar Elytra com membrana fantasma se você já tem Remendo e XP."),
+      perfect("shield", "Escudo perfeito", "utilidade",
+        ["Durabilidade III", "Remendo"],
+        "Mantém o escudo vivo em raids, exploração e combate com creepers.",
+        [
+          "Combine Durabilidade III + Remendo em um livro.",
+          "Aplique no escudo.",
+          "Renomeie junto se quiser."
+        ],
+        "Sem conflito importante.",
+        "Escudo não precisa de mais nada para ficar final.")
     ];
 
     function villager(id, name, station, focus, note, levels) {
@@ -8022,6 +8375,12 @@
     const enchantmentOverview = document.querySelector("#enchantmentOverview");
     const enchantmentGrid = document.querySelector("#enchantmentGrid");
     const enchantmentEmpty = document.querySelector("#enchantmentEmpty");
+    const perfectCategory = document.querySelector("#perfectCategory");
+    const perfectSearch = document.querySelector("#perfectSearch");
+    const perfectOverview = document.querySelector("#perfectOverview");
+    const perfectRules = document.querySelector("#perfectRules");
+    const perfectGrid = document.querySelector("#perfectGrid");
+    const perfectEmpty = document.querySelector("#perfectEmpty");
     const villagerProfession = document.querySelector("#villagerProfession");
     const villagerSearch = document.querySelector("#villagerSearch");
     const villagerOverview = document.querySelector("#villagerOverview");
@@ -8189,6 +8548,100 @@
             <span>Como obter <b>${item.source}</b></span>
           </div>
           <ul class="detail-list">${items}</ul>
+        </article>
+      `;
+    }
+
+    function renderPerfectEnchantments() {
+      const category = perfectCategory.value;
+      const query = normalizeText(perfectSearch.value);
+      const visible = perfectEnchantments.filter(item => {
+        const haystack = normalizeText([
+          item.name,
+          item.category,
+          item.choice,
+          item.avoid,
+          item.notes,
+          item.ideal.join(" "),
+          item.order.join(" ")
+        ].join(" "));
+        const matchesCategory = category === "all" || item.category === category;
+        return matchesCategory && (!query || haystack.includes(query));
+      });
+
+      renderPerfectOverview(visible);
+      perfectRules.innerHTML = anvilRules.map(ruleCard).join("");
+      perfectGrid.innerHTML = visible.map(perfectCard).join("");
+      perfectEmpty.classList.toggle("hidden", visible.length > 0);
+    }
+
+    function renderPerfectOverview(visible) {
+      const armorCount = visible.filter(item => item.category === "armadura").length;
+      const toolCount = visible.filter(item => item.category === "ferramenta").length;
+      const combatCount = visible.filter(item => item.category === "arma" || item.category === "distancia").length;
+      perfectOverview.innerHTML = [
+        ["Kits no filtro", visible.length],
+        ["Peças de armadura", armorCount],
+        ["Ferramentas", toolCount],
+        ["Armas e distância", combatCount]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+    }
+
+    function ruleCard([title, text]) {
+      return `
+        <article class="info-card perfect">
+          <div class="info-head">
+            <div>
+              <h3>${title}</h3>
+              <small>Economia de bigorna</small>
+            </div>
+            <span class="info-pill">Prioridade</span>
+          </div>
+          <p class="info-summary">${text}</p>
+        </article>
+      `;
+    }
+
+    function perfectCard(item) {
+      const ideal = item.ideal.map(line => `<li>${line}</li>`).join("");
+      const order = item.order.map(line => `<li>${line}</li>`).join("");
+      const categoryLabels = {
+        armadura: "Armadura",
+        ferramenta: "Ferramenta",
+        arma: "Corpo a corpo",
+        distancia: "Distância",
+        utilidade: "Utilidade"
+      };
+
+      return `
+        <article class="info-card perfect">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>${categoryLabels[item.category] || item.category}</small>
+            </div>
+            <span class="info-pill">Livro final</span>
+          </div>
+          <p class="info-summary"><b>Escolha recomendada:</b> ${item.choice}</p>
+          <div class="compact-stats">
+            <span>Plano <b>Pares balanceados</b></span>
+            <span>Aplicação no item <b>Deixe para o final</b></span>
+          </div>
+          <div>
+            <h4 class="subhead">Encantamentos do kit</h4>
+            <ul class="detail-list">${ideal}</ul>
+          </div>
+          <div>
+            <h4 class="subhead">Ordem sugerida na bigorna</h4>
+            <ol class="manual-steps">${order}</ol>
+          </div>
+          <div class="manual-note"><b>Evite:</b> ${item.avoid}</div>
+          <div class="manual-note"><b>Observação:</b> ${item.notes}</div>
         </article>
       `;
     }
@@ -9082,6 +9535,8 @@
     locationSearch.addEventListener("input", renderLocationAtlas);
     enchantmentCategory.addEventListener("change", renderEnchantments);
     enchantmentSearch.addEventListener("input", renderEnchantments);
+    perfectCategory.addEventListener("change", renderPerfectEnchantments);
+    perfectSearch.addEventListener("input", renderPerfectEnchantments);
     villagerProfession.addEventListener("change", renderVillagerTrades);
     villagerSearch.addEventListener("input", renderVillagerTrades);
     potionCategory.addEventListener("change", renderPotions);
@@ -9106,6 +9561,11 @@
       enchantmentCategory.value = "all";
       enchantmentSearch.value = "";
       renderEnchantments();
+    });
+    document.querySelector("#perfectReset").addEventListener("click", () => {
+      perfectCategory.value = "all";
+      perfectSearch.value = "";
+      renderPerfectEnchantments();
     });
     document.querySelector("#villagerReset").addEventListener("click", () => {
       villagerProfession.value = "all";
@@ -9150,6 +9610,7 @@
     renderLayers();
     renderLocationAtlas();
     renderEnchantments();
+    renderPerfectEnchantments();
     renderVillagerTrades();
     renderPotions();
     renderImportantFarms();
