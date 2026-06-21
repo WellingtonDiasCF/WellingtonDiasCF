@@ -907,6 +907,10 @@
       grid-template-columns: minmax(210px, 0.65fr) minmax(260px, 1.35fr) auto;
     }
 
+    .planner-toolbar {
+      grid-template-columns: minmax(170px, 0.75fr) minmax(150px, 0.65fr) minmax(250px, 1.4fr) auto;
+    }
+
     .catalog-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -938,6 +942,16 @@
 
     .info-card.trade::before {
       background: linear-gradient(90deg, var(--emerald), var(--accent));
+    }
+
+    .info-card.villager-plan::before {
+      background: linear-gradient(90deg, var(--emerald), var(--diamond), var(--accent));
+    }
+
+    .info-card.villager-plan.is-done {
+      border-color: #80c995;
+      background: #f3faf5;
+      box-shadow: 0 8px 18px rgba(40, 122, 61, 0.1);
     }
 
     .info-card.perfect::before {
@@ -1082,6 +1096,131 @@
       font-weight: 900;
       letter-spacing: 0;
       text-transform: uppercase;
+    }
+
+    .villager-plan-progress {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #dce4ea;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+
+    .villager-plan-progress-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #435166;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .villager-plan-progress-head b {
+      color: #17202a;
+    }
+
+    .villager-plan-progress-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 5px;
+      background: #dfe7e4;
+    }
+
+    .villager-plan-progress-fill {
+      width: var(--progress, 0%);
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #287a3d, #0f766e);
+      transition: width 180ms ease;
+    }
+
+    .villager-plan-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .villager-plan-actions p {
+      margin: 0;
+      color: #667386;
+      font-size: 13px;
+    }
+
+    .villager-check-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #dce4ea;
+    }
+
+    .villager-check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #17202a;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .villager-check-label input {
+      width: 19px;
+      height: 19px;
+      margin: 0;
+      accent-color: #287a3d;
+      cursor: pointer;
+    }
+
+    .villager-priority {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 7px;
+      border: 1px solid #cbe4e1;
+      border-radius: 6px;
+      background: #eef6f5;
+      color: #0f766e;
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .villager-priority.essencial {
+      border-color: #ccebd2;
+      background: #edf8ef;
+      color: #287a3d;
+    }
+
+    .villager-priority.opcional {
+      border-color: #dce4ea;
+      background: #f7f9fb;
+      color: #667386;
+    }
+
+    .villager-plan details {
+      border-top: 1px solid #dce4ea;
+      padding-top: 9px;
+    }
+
+    .villager-plan details summary {
+      color: #0f766e;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .villager-plan details p {
+      margin: 8px 0 0;
+      color: #435166;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .trade-level {
@@ -1266,7 +1405,7 @@
     }
 
     @media (max-width: 980px) {
-      header, .toolbar, .method-grid, .route-grid, .split, .guide-toolbar {
+      header, .toolbar, .method-grid, .route-grid, .split, .guide-toolbar, .planner-toolbar {
         grid-template-columns: 1fr;
       }
 
@@ -1992,6 +2131,7 @@
       <button class="tab-button" type="button" data-tab-target="enchantmentsTab">Encantamentos</button>
       <button class="tab-button" type="button" data-tab-target="perfectEnchantmentsTab">Encantamentos perfeitos</button>
       <button class="tab-button" type="button" data-tab-target="villagersTab">Trocas villagers</button>
+      <button class="tab-button" type="button" data-tab-target="villagerPlannerTab">Checklist villagers</button>
       <button class="tab-button" type="button" data-tab-target="potionsTab">Poções</button>
       <button class="tab-button" type="button" data-tab-target="importantFarmsTab">Farms importantes</button>
       <button class="tab-button" type="button" data-tab-target="materialFarmsTab">Farms por material</button>
@@ -2175,6 +2315,63 @@
         <div class="panel-body">
           <div class="catalog-grid" id="villagerGrid"></div>
           <div class="empty-state hidden" id="villagerEmpty">Nenhuma troca encontrada nesse filtro.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" id="villagerPlannerTab">
+      <section class="toolbar planner-toolbar" aria-label="Filtros da checklist de villagers">
+        <select id="villagerPlanCategory" aria-label="Filtrar categoria da checklist">
+          <option value="all">Todos os alvos</option>
+          <option value="livros">Livros encantados</option>
+          <option value="equipamento">Equipamento de diamante</option>
+          <option value="economia">Esmeraldas e recursos</option>
+          <option value="exploracao">Exploração e utilidade</option>
+        </select>
+        <select id="villagerPlanStatus" aria-label="Filtrar andamento da checklist">
+          <option value="all">Pendentes e concluídos</option>
+          <option value="pending">Somente pendentes</option>
+          <option value="done">Somente concluídos</option>
+        </select>
+        <input id="villagerPlanSearch" type="search" placeholder="Buscar profissão, livro, item, preço ou bancada">
+        <button id="villagerPlanResetFilters" type="button">Limpar filtros</button>
+      </section>
+
+      <section class="panel">
+        <h2>Plano do trading hall</h2>
+        <div class="panel-body">
+          <div class="location-overview" id="villagerPlanOverview"></div>
+          <div class="villager-plan-progress">
+            <div class="villager-plan-progress-head">
+              <span>Progresso geral</span>
+              <b id="villagerPlanProgressText">0 de 0 villagers</b>
+            </div>
+            <div class="villager-plan-progress-track" aria-hidden="true">
+              <div class="villager-plan-progress-fill" id="villagerPlanProgressFill"></div>
+            </div>
+          </div>
+          <p class="hint">
+            A lista considera um Realm Bedrock normal, sem o experimento de rebalanceamento de trocas. Os preços são valores base antes de descontos, demanda e cura.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Como rerrolar e travar corretamente</h2>
+        <div class="panel-body">
+          <div class="catalog-grid" id="villagerRerollRules"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Villagers para criar e grindar</h2>
+        <div class="panel-body">
+          <div class="villager-plan-actions">
+            <p>Cada cartão representa um villager separado no seu breeder/trading hall.</p>
+            <button id="villagerPlanResetChecklist" type="button">Desmarcar checklist</button>
+          </div>
+          <div class="catalog-grid" id="villagerPlanGrid"></div>
+          <div class="empty-state hidden" id="villagerPlanEmpty">Nenhum villager encontrado nesse filtro.</div>
         </div>
       </section>
     </section>
@@ -2363,6 +2560,13 @@
         label: "Profissões",
         value: "15 entradas",
         meta: "Valores base antes de desconto, reputação e demanda"
+      },
+      villagerPlannerTab: {
+        title: "Checklist de villagers",
+        subtitle: "Planeje o breeder e o trading hall: qual troca procurar, quanto pagar, quando rerrolar e quando travar cada villager.",
+        label: "Estratégia",
+        value: "Rerrole antes de trocar",
+        meta: "A primeira troca trava profissão e ofertas"
       },
       potionsTab: {
         title: "Poções e receitas",
@@ -4786,6 +4990,84 @@
         [
           tier("Sem ofertas", [tr("Coloque uma estação de trabalho", "Profissão correspondente", "Só funciona se não for nitwit e se o villager puder reivindicar a estação.")])
         ])
+    ];
+
+    const villagerRerollGuide = [
+      ["Prepare um por vez", "Leve um villager adulto e sem profissão para uma cela isolada. Deixe apenas a bancada que ele deve reivindicar; outras bancadas próximas podem ser vinculadas por engano no Bedrock."],
+      ["Rerroll antes da primeira troca", "Durante o horário de trabalho, coloque a bancada, espere as partículas e confira as ofertas. Se não veio o alvo, quebre a bancada, espere perder a profissão e recoloque."],
+      ["Trave quando acertar", "Quando aparecer o item e o preço que você aceita, faça uma única compra ou venda. Depois dessa primeira troca, profissão e ofertas ficam travadas mesmo se a bancada for quebrada."],
+      ["Troca de nível alto", "Armadura, ferramentas, armas, mapas e alguns itens só aparecem ao subir níveis. O Novato não revela esse resultado; suba o villager e, se falhar, use outro do breeder."],
+      ["Livros fora do atril", "Velocidade das Almas, Furtividade Veloz e Rajada de Vento não entram no grind de bibliotecário. Eles vêm de loot específico do Nether, Ancient City e ominous vault."],
+      ["Preço e descontos", "O preço-alvo dos cartões é antes de desconto. Demanda pode encarecer temporariamente; cura, reputação e Herói da Vila podem reduzir o custo depois que o villager estiver travado."]
+    ];
+
+    function villagerPlanItem(id, name, profession, station, category, priority, target, price, stage, mode, reroll, lock, why) {
+      return { id, name, profession, station, category, priority, target, price, stage, mode, reroll, lock, why };
+    }
+
+    function librarianTarget(id, enchantment, priority, price, why) {
+      return villagerPlanItem(
+        `librarian-${id}`,
+        `Bibliotecário: ${enchantment}`,
+        "Bibliotecário",
+        "Atril",
+        "livros",
+        priority,
+        `Livro encantado de ${enchantment}`,
+        price,
+        "Novato",
+        "reroll",
+        "Rerrole o atril até o livro aparecer já no nível indicado. Se vier um nível menor, continue para não carregar custo de bigorna desnecessário.",
+        "Compre o livro uma vez assim que aceitar encantamento e preço; essa compra trava o bibliotecário.",
+        why
+      );
+    }
+
+    const librarianPlanTargets = [
+      ["mending", "Remendo I", "essencial", "Base 10–38 esmeraldas + livro; excelente até 16", "Repara equipamento com XP e transforma seu set em permanente."],
+      ["unbreaking", "Durabilidade III", "essencial", "Base 11–45; tente fechar em 11–18", "Reduz o desgaste de armaduras, ferramentas, armas, escudo e Elytra."],
+      ["efficiency", "Eficiência V", "essencial", "Base 17–64; bom até 25", "Fecha todas as ferramentas sem combinar dois livros IV."],
+      ["fortune", "Fortuna III", "essencial", "Base 11–45; bom até 18", "Multiplica diamante, carvão, redstone, lápis, quartzo e outros drops."],
+      ["silk-touch", "Toque Suave I", "essencial", "Base 5–19; bom até 10", "Necessário para gelo, vidro, minério em bloco, sculk e construção."],
+      ["protection", "Proteção IV", "essencial", "Base 14–58; bom até 20", "É a proteção geral recomendada para o set principal."],
+      ["feather-falling", "Queda Suave IV", "essencial", "Base 14–58; bom até 20", "Evita mortes por queda e fecha as botas finais."],
+      ["sharpness", "Afiação V", "essencial", "Base 17–64; bom até 25", "Melhor dano geral para sua espada principal."],
+      ["looting", "Pilhagem III", "essencial", "Base 11–45; bom até 18", "Aumenta drops em farms manuais e mobs raros."],
+      ["power", "Força V", "alta", "Base 17–64; bom até 25", "Fecha o dano máximo do arco sem combinar livros menores."],
+      ["infinity", "Infinidade I", "alta", "Base 5–19; bom até 10", "Permite explorar usando uma flecha normal; não combina com Remendo."],
+      ["respiration", "Respiração III", "alta", "Base 11–45; bom até 18", "Aumenta muito o tempo submerso no capacete."],
+      ["aqua-affinity", "Afinidade Aquática I", "alta", "Base 5–19; bom até 10", "Remove a penalidade de mineração submersa no capacete."],
+      ["depth-strider", "Passos Profundos III", "alta", "Base 11–45; bom até 18", "Melhora a movimentação na água nas botas de uso geral."],
+      ["smite", "Julgamento V", "alta", "Base 17–64; bom até 25", "Espada especializada para Wither e outros mortos-vivos."],
+      ["thorns", "Espinhos III", "opcional", "Base 11–45; bom até 18", "Set ofensivo; é opcional porque aumenta o consumo de durabilidade."],
+      ["riptide", "Correnteza III", "alta", "Base 11–45; bom até 18", "Tridente de mobilidade para água e chuva; não combina com Lealdade."],
+      ["loyalty", "Lealdade III", "alta", "Base 11–45; bom até 18", "Faz o tridente arremessado voltar para sua mão."],
+      ["impaling", "Empalamento V", "alta", "Base 17–64; bom até 25", "Aumenta muito o dano do tridente no comportamento Bedrock."],
+      ["quick-charge", "Carga Rápida III", "alta", "Base 11–45; bom até 18", "Deixa a besta utilizável em combate contínuo."],
+      ["density", "Densidade V", "alta", "Base 17–64; bom até 25", "Principal livro de dano para a maça de ataque smash."],
+      ["breach", "Brecha IV", "alta", "Base 14–58; bom até 20", "Alternativa da maça contra armadura; não combina com Densidade."]
+    ].map(args => librarianTarget(...args));
+
+    const villagerPlanTargets = [
+      ...librarianPlanTargets,
+      villagerPlanItem("fletcher-sticks", "Flecheiro: esmeraldas por gravetos", "Flecheiro", "Mesa de arquearia", "economia", "essencial", "32 gravetos → 1 esmeralda", "Aceite 32; descontos reduzem depois", "Novato", "reroll", "Se a compra de gravetos não estiver visível, quebre e recoloque a mesa antes de negociar.", "Venda gravetos uma vez para travar; depois suba para arco, besta e flechas.", "É a troca inicial mais simples para financiar os bibliotecários."),
+      villagerPlanItem("fletcher-arrows", "Flecheiro: flechas com efeito", "Flecheiro", "Mesa de arquearia", "exploracao", "opcional", "5 flechas + 2 esmeraldas → 5 flechas com efeito", "O efeito é o alvo; o preço base é fixo", "Mestre", "level", "O efeito não aparece no Novato. Suba um segundo flecheiro até Mestre e confira a flecha oferecida.", "Mantenha a bancada acessível para reestoque.", "Útil para PvP, chefes e aplicações especiais."),
+      villagerPlanItem("farmer-crops", "Fazendeiro 1: cenoura ou batata", "Fazendeiro", "Composteira", "economia", "essencial", "22 cenouras ou 26 batatas → 1 esmeralda", "Prefira a plantação da sua farm", "Novato", "reroll", "Rerrole a composteira até aparecer cenoura ou batata como compra de Novato.", "Venda uma vez e suba até Mestre para cenouras douradas.", "Gera esmeraldas cedo e fornece comida de exploração."),
+      villagerPlanItem("farmer-pumpkin", "Fazendeiro 2: abóbora e melancia", "Fazendeiro", "Composteira", "economia", "essencial", "6 abóboras ou 4 melancias → 1 esmeralda", "Procure ter as duas compras", "Aprendiz/Profissional", "level", "O Novato não revela abóbora e melancia. Trave uma plantação barata e suba.", "Se faltar um fruto, use outro fazendeiro do breeder.", "É uma das melhores fontes renováveis de esmeralda."),
+      villagerPlanItem("cleric", "Clérigo: carne podre e pérola", "Clérigo", "Suporte de poções", "economia", "essencial", "32 carnes podres → esmeralda; 5 esmeraldas → pérola", "Aceite 32 carnes; pérola vem no Especialista", "Novato/Especialista", "level", "Garanta carne podre no Novato, trave e suba. A pérola só aparece depois.", "Mantenha o suporte acessível para redstone, lápis, glowstone e pérolas.", "Converte lixo de mob farm e evita caçar endermen."),
+      villagerPlanItem("armorer-legs", "Armeiro 1: calças e botas", "Armeiro", "Alto-forno", "equipamento", "essencial", "Calças e botas de diamante encantadas", "13–27 esmeraldas por peça", "Especialista", "level", "Não dá para prever no Novato. Trave carvão/ferro e suba até Especialista.", "Se faltar uma peça, preserve o estoque e suba outro armeiro.", "Fornece metade do set sem gastar diamantes."),
+      villagerPlanItem("armorer-chest", "Armeiro 2: capacete e peitoral", "Armeiro", "Alto-forno", "equipamento", "essencial", "Capacete e peitoral de diamante encantados", "Capacete 19–33; peitoral 21–35", "Mestre", "level", "Suba um segundo armeiro até Mestre; o resultado final não pode ser rerrolado.", "Use rebolo nos encantamentos ruins e aplique seus livros perfeitos.", "Completa o set e cria estoque de reserva."),
+      villagerPlanItem("toolsmith-pickaxe", "Ferramenteiro 1: picareta de diamante", "Ferramenteiro", "Mesa de ferraria", "equipamento", "essencial", "Picareta de diamante encantada", "18–32 esmeraldas", "Mestre", "level", "Trave carvão/ferro e suba até Mestre; a picareta só aparece no fim.", "Remova encantamentos ruins e aplique Fortuna ou Toque Suave.", "Torna picaretas de diamante renováveis."),
+      villagerPlanItem("toolsmith-tools", "Ferramenteiro 2: machado e pá", "Ferramenteiro", "Mesa de ferraria", "equipamento", "alta", "Machado e pá de diamante encantados", "Machado 17–31; pá 10–24", "Especialista", "level", "Suba outro ferramenteiro e confira os slots no Especialista.", "Mantenha a bancada ligada para reestoque.", "Evita gastar diamantes em ferramentas de construção."),
+      villagerPlanItem("weaponsmith", "Ferreiro de armas: espada e machado", "Ferreiro de armas", "Rebolo", "equipamento", "essencial", "Espada e machado de diamante encantados", "Espada 13–27; machado 17–31", "Especialista/Mestre", "level", "Trave carvão/ferro e suba; armas de diamante só aparecem nos níveis altos.", "Use rebolo e aplique Afiação/Pilhagem ou Julgamento.", "Garante armas renováveis e reservas."),
+      villagerPlanItem("mason-quartz", "Pedreiro 1: quartzo", "Pedreiro", "Cortador de pedras", "economia", "alta", "1 esmeralda → bloco ou pilar de quartzo", "1 esmeralda por bloco", "Mestre", "level", "Comece com 10 argilas por esmeralda e suba até Mestre.", "Se não vier o bloco desejado, suba outro pedreiro.", "Poupa mineração de quartzo em construções grandes."),
+      villagerPlanItem("mason-colors", "Pedreiro 2: terracota útil", "Pedreiro", "Cortador de pedras", "economia", "opcional", "Terracota/esmaltada nas cores do projeto", "1 esmeralda conforme o slot", "Profissional/Especialista", "level", "As cores só aparecem depois de subir; crie extras até achar as cores úteis.", "Mantenha somente cores que você realmente usa.", "Substitui viagens à badlands e tingimento."),
+      villagerPlanItem("cartographer", "Cartógrafo: mapas", "Cartógrafo", "Mesa de cartografia", "exploracao", "alta", "Mapas de monumento oceânico e mansão", "13–14 esmeraldas + bússola", "Aprendiz", "level", "Trave papel no Novato e suba para conferir os mapas.", "Compre cada mapa desejado ao menos uma vez.", "Localiza estruturas sem exploração aleatória."),
+      villagerPlanItem("leatherworker", "Coureiro: sela", "Coureiro", "Caldeirão", "exploracao", "alta", "Sela renovável", "4–6 esmeraldas", "Especialista/Mestre", "level", "Trave couro no Novato e suba; a sela só é confirmada nos níveis altos.", "Se não aparecer, use outro coureiro.", "Sela renovável para cavalos e striders."),
+      villagerPlanItem("shepherd", "Pastor: esmeraldas por lã", "Pastor", "Tear", "economia", "opcional", "18 lãs brancas → 1 esmeralda", "Aceite 18", "Novato", "reroll", "Rerrole o tear se a compra de lã útil não aparecer.", "Venda uma vez e suba apenas se quiser decoração.", "Boa saída para farm automática de lã."),
+      villagerPlanItem("butcher", "Açougueiro: carnes", "Açougueiro", "Defumador", "economia", "opcional", "Frango, porco ou carne bovina → esmeralda", "14 frangos, 7 porcos ou 7 carnes", "Novato/Aprendiz", "reroll", "Escolha a carne produzida por sua farm e rerrole antes de negociar.", "Trave a compra útil e suba para comidas prontas.", "Transforma excesso de animais em esmeralda."),
+      villagerPlanItem("fisherman", "Pescador: fio e fogueira", "Pescador", "Barril", "economia", "opcional", "20 fios ou 10 carvões → esmeralda; fogueira por 2", "Priorize o recurso que você produz", "Novato/Aprendiz", "reroll", "Rerrole o barril para alinhar a compra com sua farm.", "Trave e suba ao Aprendiz para fogueiras.", "Dá uso ao fio e carvão excedente."),
+      villagerPlanItem("spare", "Villager reserva", "Sem profissão", "Nenhuma", "exploracao", "alta", "1 adulto reserva protegido", "Sem troca: contingência", "Sem profissão", "none", "Não negocie e não deixe bancadas livres por perto.", "Mantenha em cela segura com transporte pronto.", "Substitui qualquer villager morto ou profissão que falhou.")
     ];
 
     function potion(name, categories, base, ingredient, upgrades, use, details, cautions) {
@@ -8386,6 +8668,15 @@
     const villagerOverview = document.querySelector("#villagerOverview");
     const villagerGrid = document.querySelector("#villagerGrid");
     const villagerEmpty = document.querySelector("#villagerEmpty");
+    const villagerPlanCategory = document.querySelector("#villagerPlanCategory");
+    const villagerPlanStatus = document.querySelector("#villagerPlanStatus");
+    const villagerPlanSearch = document.querySelector("#villagerPlanSearch");
+    const villagerPlanOverview = document.querySelector("#villagerPlanOverview");
+    const villagerPlanProgressText = document.querySelector("#villagerPlanProgressText");
+    const villagerPlanProgressFill = document.querySelector("#villagerPlanProgressFill");
+    const villagerRerollRules = document.querySelector("#villagerRerollRules");
+    const villagerPlanGrid = document.querySelector("#villagerPlanGrid");
+    const villagerPlanEmpty = document.querySelector("#villagerPlanEmpty");
     const potionCategory = document.querySelector("#potionCategory");
     const potionSearch = document.querySelector("#potionSearch");
     const potionOverview = document.querySelector("#potionOverview");
@@ -8409,6 +8700,26 @@
     const redstoneComponentsPanel = document.querySelector("#redstoneComponentsPanel");
     const redstoneSystemsPanel = document.querySelector("#redstoneSystemsPanel");
     const redstoneEmpty = document.querySelector("#redstoneEmpty");
+
+    const villagerPlanStorageKey = "minecraft-villager-plan-v1";
+    let villagerPlanChecks = {};
+
+    try {
+      const savedVillagerPlan = JSON.parse(localStorage.getItem(villagerPlanStorageKey) || "{}");
+      if (savedVillagerPlan && typeof savedVillagerPlan === "object") {
+        villagerPlanChecks = savedVillagerPlan;
+      }
+    } catch {
+      villagerPlanChecks = {};
+    }
+
+    function saveVillagerPlanChecks() {
+      try {
+        localStorage.setItem(villagerPlanStorageKey, JSON.stringify(villagerPlanChecks));
+      } catch {
+        // A checklist continua funcionando na sessão mesmo se o navegador bloquear armazenamento local.
+      }
+    }
 
     function setupSelect() {
       ores.forEach(ore => {
@@ -8715,6 +9026,112 @@
           <span><b>${trade.gives}</b></span>
           ${trade.note ? `<span class="trade-note">${trade.note}</span>` : ""}
         </div>
+      `;
+    }
+
+    function renderVillagerPlan() {
+      const category = villagerPlanCategory.value;
+      const status = villagerPlanStatus.value;
+      const query = normalizeText(villagerPlanSearch.value);
+      const visible = villagerPlanTargets.filter(item => {
+        const done = Boolean(villagerPlanChecks[item.id]);
+        const haystack = normalizeText([
+          item.name,
+          item.profession,
+          item.station,
+          item.category,
+          item.priority,
+          item.target,
+          item.price,
+          item.stage,
+          item.reroll,
+          item.lock,
+          item.why
+        ].join(" "));
+        const matchesCategory = category === "all" || item.category === category;
+        const matchesStatus = status === "all" || (status === "done" ? done : !done);
+        return matchesCategory && matchesStatus && (!query || haystack.includes(query));
+      });
+
+      renderVillagerPlanOverview(visible);
+      villagerRerollRules.innerHTML = villagerRerollGuide.map(villagerRuleCard).join("");
+      villagerPlanGrid.innerHTML = visible.map(villagerPlanCard).join("");
+      villagerPlanEmpty.classList.toggle("hidden", visible.length > 0);
+    }
+
+    function renderVillagerPlanOverview(visible) {
+      const total = villagerPlanTargets.length;
+      const done = villagerPlanTargets.filter(item => villagerPlanChecks[item.id]).length;
+      const essentialTargets = villagerPlanTargets.filter(item => item.priority === "essencial");
+      const essentialDone = essentialTargets.filter(item => villagerPlanChecks[item.id]).length;
+      const librarians = villagerPlanTargets.filter(item => item.category === "livros").length;
+      const progress = total ? Math.round(done / total * 100) : 0;
+
+      villagerPlanOverview.innerHTML = [
+        ["Alvos visíveis", visible.length],
+        ["Villagers concluídos", `${done} / ${total}`],
+        ["Essenciais concluídos", `${essentialDone} / ${essentialTargets.length}`],
+        ["Bibliotecários planejados", librarians]
+      ].map(([label, value]) => `
+        <div class="location-stat">
+          <span>${label}</span>
+          <b>${value}</b>
+        </div>
+      `).join("");
+
+      villagerPlanProgressText.textContent = `${done} de ${total} villagers (${progress}%)`;
+      villagerPlanProgressFill.style.setProperty("--progress", `${progress}%`);
+    }
+
+    function villagerRuleCard([title, text]) {
+      return `
+        <article class="info-card villager-plan">
+          <div class="info-head">
+            <div>
+              <h3>${title}</h3>
+              <small>Procedimento do trading hall</small>
+            </div>
+            <span class="info-pill">Bedrock</span>
+          </div>
+          <p class="info-summary">${text}</p>
+        </article>
+      `;
+    }
+
+    function villagerPlanCard(item) {
+      const done = Boolean(villagerPlanChecks[item.id]);
+      const priorityLabels = { essencial: "Essencial", alta: "Alta prioridade", opcional: "Opcional" };
+      const modeLabels = { reroll: "Rerroll visível", level: "Subir nível", none: "Reserva" };
+      const checked = done ? " checked" : "";
+
+      return `
+        <article class="info-card villager-plan${done ? " is-done" : ""}">
+          <div class="info-head">
+            <div>
+              <h3>${item.name}</h3>
+              <small>${item.profession} · Bancada: ${item.station}</small>
+            </div>
+            <span class="info-pill">${item.stage}</span>
+          </div>
+          <p class="info-summary"><b>Procure:</b> ${item.target}</p>
+          <div class="compact-stats">
+            <span>Preço-alvo <b>${item.price}</b></span>
+            <span>Método <b>${modeLabels[item.mode] || item.mode}</b></span>
+          </div>
+          <div class="manual-note"><b>Por que ter:</b> ${item.why}</div>
+          <details>
+            <summary>Como conseguir e travar</summary>
+            <p><b>Rerroll/progressão:</b> ${item.reroll}</p>
+            <p><b>Depois que acertar:</b> ${item.lock}</p>
+          </details>
+          <div class="villager-check-row">
+            <label class="villager-check-label">
+              <input type="checkbox" data-villager-plan-check="${item.id}"${checked}>
+              <span>${done ? "Conseguido e travado" : "Marcar como conseguido"}</span>
+            </label>
+            <span class="villager-priority ${item.priority}">${priorityLabels[item.priority] || item.priority}</span>
+          </div>
+        </article>
       `;
     }
 
@@ -9539,6 +9956,16 @@
     perfectSearch.addEventListener("input", renderPerfectEnchantments);
     villagerProfession.addEventListener("change", renderVillagerTrades);
     villagerSearch.addEventListener("input", renderVillagerTrades);
+    villagerPlanCategory.addEventListener("change", renderVillagerPlan);
+    villagerPlanStatus.addEventListener("change", renderVillagerPlan);
+    villagerPlanSearch.addEventListener("input", renderVillagerPlan);
+    villagerPlanGrid.addEventListener("change", event => {
+      const checkbox = event.target.closest("[data-villager-plan-check]");
+      if (!checkbox) return;
+      villagerPlanChecks[checkbox.dataset.villagerPlanCheck] = checkbox.checked;
+      saveVillagerPlanChecks();
+      renderVillagerPlan();
+    });
     potionCategory.addEventListener("change", renderPotions);
     potionSearch.addEventListener("input", renderPotions);
     farmCategory.addEventListener("change", renderImportantFarms);
@@ -9571,6 +9998,18 @@
       villagerProfession.value = "all";
       villagerSearch.value = "";
       renderVillagerTrades();
+    });
+    document.querySelector("#villagerPlanResetFilters").addEventListener("click", () => {
+      villagerPlanCategory.value = "all";
+      villagerPlanStatus.value = "all";
+      villagerPlanSearch.value = "";
+      renderVillagerPlan();
+    });
+    document.querySelector("#villagerPlanResetChecklist").addEventListener("click", () => {
+      if (!window.confirm("Desmarcar todos os villagers da checklist?")) return;
+      villagerPlanChecks = {};
+      saveVillagerPlanChecks();
+      renderVillagerPlan();
     });
     document.querySelector("#potionReset").addEventListener("click", () => {
       potionCategory.value = "all";
@@ -9612,6 +10051,7 @@
     renderEnchantments();
     renderPerfectEnchantments();
     renderVillagerTrades();
+    renderVillagerPlan();
     renderPotions();
     renderImportantFarms();
     renderMaterialFarms();
